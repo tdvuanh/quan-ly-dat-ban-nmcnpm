@@ -1,35 +1,82 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import "./App.css";
+import { useState } from 'react';
+import { SplashScreen } from './components/SplashScreen';
+import { LoginScreen } from './components/LoginScreen';
+import { HomeScreen } from './components/HomeScreen';
+import { BookingScreen } from './components/BookingScreen';
+import { ConfirmationScreen } from './components/ConfirmationScreen';
+import { PaymentScreen } from './components/PaymentScreen';
+import { PaymentSuccessScreen } from './components/PaymentSuccessScreen';
+import { ProfileScreen } from './components/ProfileScreen';
+import { TableMapScreen } from './components/TableMapScreen';
+import { AdminDashboard } from './components/AdminDashboard';
 
-function App() {
-  const [count, setCount] = useState(0);
+type Screen =
+  | 'splash'
+  | 'login'
+  | 'home'
+  | 'booking'
+  | 'confirmation'
+  | 'payment'
+  | 'paymentSuccess'
+  | 'profile'
+  | 'tableMap'
+  | 'admin';
 
-  return (
-    <>
-      <div className="flex justify-center">
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1 className="font-bold underline">Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs text-3xl font-bold underline">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  );
+export default function App() {
+  const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
+  const [userRole, setUserRole] = useState<'customer' | 'admin' | null>(null);
+  const [navigationData, setNavigationData] = useState<any>(null);
+
+  const handleNavigate = (screen: string, data?: any) => {
+    setCurrentScreen(screen as Screen);
+    setNavigationData(data);
+  };
+
+  const handleLogin = (role: 'customer' | 'admin') => {
+    setUserRole(role);
+    if (role === 'admin') {
+      setCurrentScreen('admin');
+    } else {
+      setCurrentScreen('home');
+    }
+  };
+
+  const renderScreen = () => {
+    switch (currentScreen) {
+      case 'splash':
+        return <SplashScreen onFinish={() => setCurrentScreen('login')} />;
+
+      case 'login':
+        return <LoginScreen onLogin={handleLogin} />;
+
+      case 'home':
+        return <HomeScreen onNavigate={handleNavigate} />;
+
+      case 'booking':
+        return <BookingScreen onNavigate={handleNavigate} initialData={navigationData} />;
+
+      case 'confirmation':
+        return <ConfirmationScreen onNavigate={handleNavigate} bookingData={navigationData} />;
+
+      case 'payment':
+        return <PaymentScreen onNavigate={handleNavigate} bookingData={navigationData} />;
+
+      case 'paymentSuccess':
+        return <PaymentSuccessScreen onNavigate={handleNavigate} paymentData={navigationData} />;
+
+      case 'profile':
+        return <ProfileScreen onNavigate={handleNavigate} />;
+
+      case 'tableMap':
+        return <TableMapScreen onNavigate={handleNavigate} initialArea={navigationData?.area} />;
+
+      case 'admin':
+        return <AdminDashboard onNavigate={handleNavigate} />;
+
+      default:
+        return <HomeScreen onNavigate={handleNavigate} />;
+    }
+  };
+
+  return <div className="min-h-screen bg-white">{renderScreen()}</div>;
 }
-
-export default App;
