@@ -13,7 +13,7 @@ interface HomeScreenProps {
 
 export function HomeScreen({ onNavigate }: HomeScreenProps) {
   // const [selectedArea, setSelectedArea] = useState<string | null>(null);
-  const [searchDate, setSearchDate] = useState('2025-11-04');
+  const [searchDate] = useState('2025-11-04');
 
   const filteredTables = tables;
 
