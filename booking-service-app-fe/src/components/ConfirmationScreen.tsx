@@ -10,7 +10,6 @@ interface ConfirmationScreenProps {
 }
 
 export function ConfirmationScreen({ onNavigate, bookingData }: ConfirmationScreenProps) {
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex flex-col">
       {/* Content */}
@@ -32,18 +31,14 @@ export function ConfirmationScreen({ onNavigate, bookingData }: ConfirmationScre
               <CheckCircle className="w-12 h-12 text-white" />
             </motion.div>
             <h2 className="text-green-600 mb-2">Đã chọn bàn thành công!</h2>
-            <p className="text-gray-600">
-              Vui lòng tiến hành thanh toán để hoàn tất đặt bàn
-            </p>
+            <p className="text-gray-600">Vui lòng tiến hành thanh toán để hoàn tất đặt bàn</p>
           </div>
 
           {/* Booking Summary */}
           <Card className="p-6 rounded-3xl shadow-lg mb-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-gray-900">Thông tin bàn</h3>
-              <Badge className="bg-orange-100 text-orange-700 border-orange-200">
-                Đang chờ
-              </Badge>
+              <Badge className="bg-orange-100 text-orange-700 border-orange-200">Đang chờ</Badge>
             </div>
 
             <div className="space-y-4">

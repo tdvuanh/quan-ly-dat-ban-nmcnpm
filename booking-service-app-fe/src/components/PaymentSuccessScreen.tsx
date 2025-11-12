@@ -12,14 +12,21 @@ interface PaymentSuccessScreenProps {
 export function PaymentSuccessScreen({ onNavigate, paymentData }: PaymentSuccessScreenProps) {
   const bookingCode = `BK${Date.now().toString().slice(-6)}`;
   const currentDate = new Date().toLocaleDateString('vi-VN');
-  const currentTime = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  const currentTime = new Date().toLocaleTimeString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
   const getPaymentMethodText = (method: string) => {
     switch (method) {
-      case 'card': return 'Thẻ tín dụng/ghi nợ';
-      case 'momo': return 'Ví MoMo';
-      case 'banking': return 'Chuyển khoản ngân hàng';
-      default: return method;
+      case 'card':
+        return 'Thẻ tín dụng/ghi nợ';
+      case 'momo':
+        return 'Ví MoMo';
+      case 'banking':
+        return 'Chuyển khoản ngân hàng';
+      default:
+        return method;
     }
   };
 
@@ -99,7 +106,9 @@ export function PaymentSuccessScreen({ onNavigate, paymentData }: PaymentSuccess
 
               <div className="flex justify-between items-center pt-2">
                 <span className="text-gray-600">Phương thức</span>
-                <span className="text-gray-900">{getPaymentMethodText(paymentData?.paymentMethod)}</span>
+                <span className="text-gray-900">
+                  {getPaymentMethodText(paymentData?.paymentMethod)}
+                </span>
               </div>
             </div>
 
@@ -144,7 +153,8 @@ export function PaymentSuccessScreen({ onNavigate, paymentData }: PaymentSuccess
           <Card className="mt-6 p-4 rounded-2xl bg-blue-50 border-blue-100">
             <p className="text-sm text-blue-900 mb-1">📱 Thông tin quan trọng</p>
             <p className="text-xs text-blue-700 mb-2">
-              Vui lòng lưu lại mã đặt bàn <span className="font-medium">{bookingCode}</span> để xuất trình khi đến nhà hàng.
+              Vui lòng lưu lại mã đặt bàn <span className="font-medium">{bookingCode}</span> để xuất
+              trình khi đến nhà hàng.
             </p>
             <p className="text-xs text-blue-700">
               Liên hệ: <span className="font-medium">1900 1234</span> nếu cần hỗ trợ.
