@@ -5,18 +5,22 @@ import { Badge } from './ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import { motion } from 'motion/react';
 import { ArrowLeft, User, Mail, Phone, Calendar, MapPin, Clock, X, Edit } from 'lucide-react';
-import { bookings, areas, mockUser } from '../data/mockData';
+import { bookings, areas, mockUser, type Booking } from '../data/mockData';
 
 interface ProfileScreenProps {
   onNavigate: (screen: string) => void;
 }
 
+interface BookingCardProps {
+  booking: Booking;
+}
+
 export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
   const [activeTab, setActiveTab] = useState('bookings');
 
-  const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
-  const completedBookings = bookings.filter(b => b.status === 'completed');
-  const cancelledBookings = bookings.filter(b => b.status === 'cancelled');
+  const confirmedBookings = bookings.filter((b) => b.status === 'confirmed');
+  const completedBookings = bookings.filter((b) => b.status === 'completed');
+  const cancelledBookings = bookings.filter((b) => b.status === 'cancelled');
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -31,9 +35,9 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
     }
   };
 
-  const BookingCard = ({ booking }: { booking: any }) => {
-    const areaName = areas.find(a => a.id === booking.area)?.name;
-    
+  const BookingCard: React.FC<BookingCardProps> = ({ booking }: { booking: Booking }) => {
+    const areaName = areas.find((a) => a.id === booking.area)?.name;
+
     return (
       <Card className="p-4 rounded-2xl mb-3">
         <div className="flex items-start justify-between mb-3">
@@ -78,7 +82,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex flex-col">
+    <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-orange-50 flex flex-col">
       {/* Header */}
       <div className="bg-white shadow-sm px-6 py-4">
         <div className="flex items-center justify-between mb-4">
@@ -98,12 +102,8 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
       {/* Content */}
       <div className="flex-1 overflow-auto px-6 py-6">
         {/* User Info */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
-        >
-          <Card className="p-6 rounded-3xl bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+          <Card className="p-6 rounded-3xl bg-linear-to-br from-orange-500 to-orange-600 text-white">
             <div className="flex items-center">
               <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mr-4">
                 <User className="w-8 h-8 text-white" />
@@ -152,20 +152,20 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
         >
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="w-full grid grid-cols-3 h-12 bg-white rounded-2xl p-1">
-              <TabsTrigger 
-                value="bookings" 
+              <TabsTrigger
+                value="bookings"
                 className="rounded-xl data-[state=active]:bg-orange-500 data-[state=active]:text-white"
               >
                 Đã đặt
               </TabsTrigger>
-              <TabsTrigger 
-                value="completed" 
+              <TabsTrigger
+                value="completed"
                 className="rounded-xl data-[state=active]:bg-orange-500 data-[state=active]:text-white"
               >
                 Hoàn tất
               </TabsTrigger>
-              <TabsTrigger 
-                value="cancelled" 
+              <TabsTrigger
+                value="cancelled"
                 className="rounded-xl data-[state=active]:bg-orange-500 data-[state=active]:text-white"
               >
                 Đã hủy
@@ -174,7 +174,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
 
             <TabsContent value="bookings" className="mt-6">
               {confirmedBookings.length > 0 ? (
-                confirmedBookings.map(booking => (
+                confirmedBookings.map((booking) => (
                   <BookingCard key={booking.id} booking={booking} />
                 ))
               ) : (
@@ -185,7 +185,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
                   <p className="text-gray-600 mb-4">Chưa có đặt bàn nào</p>
                   <Button
                     onClick={() => onNavigate('home')}
-                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl"
+                    className="bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl"
                   >
                     Đặt bàn ngay
                   </Button>
@@ -195,7 +195,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
 
             <TabsContent value="completed" className="mt-6">
               {completedBookings.length > 0 ? (
-                completedBookings.map(booking => (
+                completedBookings.map((booking) => (
                   <BookingCard key={booking.id} booking={booking} />
                 ))
               ) : (
@@ -207,7 +207,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
 
             <TabsContent value="cancelled" className="mt-6">
               {cancelledBookings.length > 0 ? (
-                cancelledBookings.map(booking => (
+                cancelledBookings.map((booking) => (
                   <BookingCard key={booking.id} booking={booking} />
                 ))
               ) : (

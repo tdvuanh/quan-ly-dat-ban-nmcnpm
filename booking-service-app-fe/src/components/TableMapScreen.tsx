@@ -13,7 +13,7 @@ interface TableMapScreenProps {
 export function TableMapScreen({ onNavigate, initialArea }: TableMapScreenProps) {
   const [selectedArea, setSelectedArea] = useState(initialArea || 'floor1');
 
-  const areaTables = tables.filter(t => t.area === selectedArea);
+  const areaTables = tables.filter((t) => t.area === selectedArea);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -32,11 +32,16 @@ export function TableMapScreen({ onNavigate, initialArea }: TableMapScreenProps)
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'available': return 'Trống';
-      case 'booked': return 'Đã đặt';
-      case 'serving': return 'Phục vụ';
-      case 'cleaning': return 'Dọn dẹp';
-      default: return status;
+      case 'available':
+        return 'Trống';
+      case 'booked':
+        return 'Đã đặt';
+      case 'serving':
+        return 'Phục vụ';
+      case 'cleaning':
+        return 'Dọn dẹp';
+      default:
+        return status;
     }
   };
 
@@ -113,8 +118,8 @@ export function TableMapScreen({ onNavigate, initialArea }: TableMapScreenProps)
           {/* Area label */}
           <div className="text-center mb-8">
             <p className="text-gray-400 text-sm">
-              {areas.find(a => a.id === selectedArea)?.icon}{' '}
-              {areas.find(a => a.id === selectedArea)?.name}
+              {areas.find((a) => a.id === selectedArea)?.icon}{' '}
+              {areas.find((a) => a.id === selectedArea)?.name}
             </p>
           </div>
 
@@ -143,10 +148,7 @@ export function TableMapScreen({ onNavigate, initialArea }: TableMapScreenProps)
                 </button>
                 <div className="mt-2 text-center">
                   <p className="text-xs text-gray-600">{table.capacity} người</p>
-                  <Badge
-                    variant="outline"
-                    className="text-xs mt-1 border-gray-200"
-                  >
+                  <Badge variant="outline" className="text-xs mt-1 border-gray-200">
                     {getStatusText(table.status)}
                   </Badge>
                 </div>

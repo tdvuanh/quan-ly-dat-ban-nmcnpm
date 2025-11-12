@@ -39,6 +39,7 @@ export default function App() {
     } else {
       setCurrentScreen('home');
     }
+    return userRole;
   };
 
   const renderScreen = () => {

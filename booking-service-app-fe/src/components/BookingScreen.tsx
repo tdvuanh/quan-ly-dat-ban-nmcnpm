@@ -14,16 +14,16 @@ interface BookingScreenProps {
 export function BookingScreen({ onNavigate, initialData }: BookingScreenProps) {
   const [selectedTableId, setSelectedTableId] = useState(initialData?.tableId || '');
 
-  const availableTables = tables.filter(t => t.status === 'available');
-  const selectedTable = tables.find(t => t.id === selectedTableId);
+  const availableTables = tables.filter((t) => t.status === 'available');
+  const selectedTable = tables.find((t) => t.id === selectedTableId);
 
   const handleConfirm = () => {
     if (!selectedTableId) return;
-    
+
     const bookingData = {
       tableId: selectedTableId,
       tableNumber: selectedTable?.number,
-      capacity: selectedTable?.capacity
+      capacity: selectedTable?.capacity,
     };
     onNavigate('confirmation', bookingData);
   };
@@ -85,8 +85,18 @@ export function BookingScreen({ onNavigate, initialData }: BookingScreenProps) {
                         <p className="text-gray-900">{table.number}</p>
                         {selectedTableId === table.id && (
                           <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center">
-                            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            <svg
+                              className="w-4 h-4 text-white"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
                             </svg>
                           </div>
                         )}
