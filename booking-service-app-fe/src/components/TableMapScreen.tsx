@@ -46,7 +46,7 @@ export function TableMapScreen({ onNavigate, initialArea }: TableMapScreenProps)
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex flex-col">
+    <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-orange-50 flex flex-col">
       {/* Header */}
       <div className="bg-white shadow-sm px-6 py-4">
         <div className="flex items-center justify-between mb-4">
@@ -71,7 +71,7 @@ export function TableMapScreen({ onNavigate, initialArea }: TableMapScreenProps)
             <button
               key={area.id}
               onClick={() => setSelectedArea(area.id)}
-              className={`flex-shrink-0 px-4 py-2 rounded-2xl transition-all flex items-center gap-2 ${
+              className={`shrink-0 px-4 py-2 rounded-2xl transition-all flex items-center gap-2 ${
                 selectedArea === area.id
                   ? 'bg-orange-500 text-white shadow-md'
                   : 'bg-white text-gray-600 border border-gray-200'
@@ -136,7 +136,7 @@ export function TableMapScreen({ onNavigate, initialArea }: TableMapScreenProps)
                 <button
                   onClick={() => {
                     if (table.status === 'available') {
-                      onNavigate('booking', { tableId: table.id });
+                      onNavigate('booking');
                     }
                   }}
                   className={`w-20 h-20 rounded-2xl ${getStatusColor(table.status)} text-white shadow-lg transition-all transform hover:scale-110 flex flex-col items-center justify-center ${
@@ -169,7 +169,7 @@ export function TableMapScreen({ onNavigate, initialArea }: TableMapScreenProps)
       <div className="bg-white border-t border-gray-100 px-6 py-4">
         <Button
           onClick={() => onNavigate('booking')}
-          className="w-full h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl"
+          className="w-full h-12 bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl"
         >
           Đặt bàn ngay
         </Button>
