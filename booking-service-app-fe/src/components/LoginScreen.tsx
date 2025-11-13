@@ -14,7 +14,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
         <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center">
           <span className="text-2xl">🍽️</span>
         </div>
-        <span className="ml-3 text-orange-600">TableBook</span>
+        <span className="ml-3 text-orange-600">Quản Lý Đặt Bàn</span>
       </div>
 
       {/* Content */}
@@ -26,7 +26,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
           className="max-w-md w-full"
         >
           <div className="text-center mb-12">
-            <h1 className="text-gray-900 mb-2">Chào mừng đến TableBook</h1>
+            <h1 className="text-gray-900 mb-2">Kính Chào Quý Khách</h1>
             <p className="text-gray-600">Chọn vai trò để tiếp tục</p>
           </div>
 
