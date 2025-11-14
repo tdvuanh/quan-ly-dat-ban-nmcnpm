@@ -1,19 +1,22 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { motion } from 'motion/react';
 import { Search, Calendar, Users, MapPin, Bell, User, Clock } from 'lucide-react';
-import { tables, bookings } from '../data/mockData';
+import { tables, areas, bookings } from '../data/mockData';
+import { NotificationPopup } from './NotificationPopup';
 
 interface HomeScreenProps {
   onNavigate: (screen: string, data?: any) => void;
 }
 
 export function HomeScreen({ onNavigate }: HomeScreenProps) {
-  // const [selectedArea, setSelectedArea] = useState<string | null>(null);
-  const [searchDate] = useState('2025-11-04');
+  const [selectedArea, setSelectedArea] = useState<string | null>(null);
+  const [searchDate, setSearchDate] = useState('2025-11-04');
+  const [showNotifications, setShowNotifications] = useState(false);
+  const notificationButtonRef = useRef<HTMLButtonElement>(null);
 
   const filteredTables = tables;
 
@@ -34,44 +37,41 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'available':
-        return 'Trống';
-      case 'booked':
-        return 'Đã đặt';
-      case 'serving':
-        return 'Đang phục vụ';
-      case 'cleaning':
-        return 'Dọn dẹp';
-      default:
-        return status;
+      case 'available': return 'Trống';
+      case 'booked': return 'Đã đặt';
+      case 'serving': return 'Đang phục vụ';
+      case 'cleaning': return 'Dọn dẹp';
+      default: return status;
     }
   };
 
-  const availableTablesCount = tables.filter((t) => t.status === 'available').length;
-  const todayBookingsCount = bookings.filter(
-    (b) => b.date === searchDate && b.status === 'confirmed'
-  ).length;
+  const availableTablesCount = tables.filter(t => t.status === 'available').length;
+  const todayBookingsCount = bookings.filter(b => b.date === searchDate && b.status === 'confirmed').length;
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-orange-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex flex-col">
       {/* Header */}
       <div className="bg-white shadow-sm px-6 py-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
-            <div className="w-10 h-10 bg-linear-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center">
               <span className="text-2xl">🍽️</span>
             </div>
             <div className="ml-3">
               <span className="text-orange-600">Quản Lý Đặt Bàn</span>
-              <p className="text-xs text-gray-500">Xin chào! 👋</p>
+              <p className="text-xs text-gray-500">Xin chào!</p>
             </div>
           </div>
           <div className="flex gap-2">
-            <button className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors relative">
+            <button 
+              onClick={() => setShowNotifications(!showNotifications)}
+              ref={notificationButtonRef}
+              className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors relative"
+            >
               <Bell className="w-5 h-5 text-gray-600" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full"></span>
             </button>
-            <button
+            <button 
               onClick={() => onNavigate('profile')}
               className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center hover:bg-orange-200 transition-colors"
             >
@@ -100,7 +100,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Card className="p-4 bg-linear-to-br from-green-50 to-white border-green-100 rounded-2xl">
+            <Card className="p-4 bg-gradient-to-br from-green-50 to-white border-green-100 rounded-2xl">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Bàn trống</p>
@@ -118,7 +118,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Card className="p-4 bg-linear-to-br from-orange-50 to-white border-orange-100 rounded-2xl">
+            <Card className="p-4 bg-gradient-to-br from-orange-50 to-white border-orange-100 rounded-2xl">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Đặt hôm nay</p>
@@ -140,7 +140,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
         >
           <Button
             onClick={() => onNavigate('booking')}
-            className="w-full h-14 bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl shadow-lg shadow-orange-200 mb-6"
+            className="w-full h-14 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl shadow-lg shadow-orange-200 mb-6"
           >
             <Calendar className="w-5 h-5 mr-2" />
             Đặt bàn ngay
@@ -152,9 +152,11 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
           <div className="flex items-center justify-between mb-3">
             <p className="text-gray-900">
               Danh sách bàn
-              <span className="text-sm text-gray-500 ml-2">({filteredTables.length} bàn)</span>
+              <span className="text-sm text-gray-500 ml-2">
+                ({filteredTables.length} bàn)
+              </span>
             </p>
-            <button
+            <button 
               onClick={() => onNavigate('tableMap')}
               className="text-sm text-orange-600 flex items-center gap-1"
             >
@@ -171,10 +173,10 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
-                <Card
+                <Card 
                   className={`p-4 rounded-2xl border-2 cursor-pointer transition-all hover:shadow-md ${
-                    table.status === 'available'
-                      ? 'bg-white hover:border-orange-300'
+                    table.status === 'available' 
+                      ? 'bg-white hover:border-orange-300' 
                       : 'bg-gray-50 opacity-75'
                   }`}
                   onClick={() => {
@@ -198,7 +200,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
                       {getStatusText(table.status)}
                     </Badge>
                   </div>
-
+                  
                   {table.status === 'booked' && (
                     <div className="flex items-center text-xs text-gray-500 bg-orange-50 rounded-lg px-2 py-1">
                       <Clock className="w-3 h-3 mr-1" />
@@ -211,6 +213,13 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
           </div>
         </div>
       </div>
+
+      {/* Notification Popup */}
+      <NotificationPopup
+        isOpen={showNotifications}
+        onClose={() => setShowNotifications(false)}
+        anchorRef={notificationButtonRef}
+      />
     </div>
   );
 }

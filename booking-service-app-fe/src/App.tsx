@@ -9,18 +9,22 @@ import { PaymentSuccessScreen } from './components/PaymentSuccessScreen';
 import { ProfileScreen } from './components/ProfileScreen';
 import { TableMapScreen } from './components/TableMapScreen';
 import { AdminDashboard } from './components/AdminDashboard';
+import { LogoPage } from './components/LogoPage';
+import { NotificationScreen } from './components/NotificationScreen';
 
-type Screen =
-  | 'splash'
-  | 'login'
-  | 'home'
-  | 'booking'
+type Screen = 
+  | 'splash' 
+  | 'login' 
+  | 'home' 
+  | 'booking' 
   | 'confirmation'
   | 'payment'
   | 'paymentSuccess'
-  | 'profile'
+  | 'profile' 
   | 'tableMap'
-  | 'admin';
+  | 'admin'
+  | 'logo'
+  | 'notifications';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
@@ -39,45 +43,78 @@ export default function App() {
     } else {
       setCurrentScreen('home');
     }
-    return userRole;
   };
 
   const renderScreen = () => {
     switch (currentScreen) {
       case 'splash':
         return <SplashScreen onFinish={() => setCurrentScreen('login')} />;
-
+      
       case 'login':
         return <LoginScreen onLogin={handleLogin} />;
-
+      
       case 'home':
         return <HomeScreen onNavigate={handleNavigate} />;
-
+      
       case 'booking':
-        return <BookingScreen onNavigate={handleNavigate} initialData={navigationData} />;
-
+        return (
+          <BookingScreen 
+            onNavigate={handleNavigate} 
+            initialData={navigationData}
+          />
+        );
+      
       case 'confirmation':
-        return <ConfirmationScreen onNavigate={handleNavigate} bookingData={navigationData} />;
-
+        return (
+          <ConfirmationScreen 
+            onNavigate={handleNavigate} 
+            bookingData={navigationData}
+          />
+        );
+      
       case 'payment':
-        return <PaymentScreen onNavigate={handleNavigate} bookingData={navigationData} />;
-
+        return (
+          <PaymentScreen 
+            onNavigate={handleNavigate} 
+            bookingData={navigationData}
+          />
+        );
+      
       case 'paymentSuccess':
-        return <PaymentSuccessScreen onNavigate={handleNavigate} paymentData={navigationData} />;
-
+        return (
+          <PaymentSuccessScreen 
+            onNavigate={handleNavigate} 
+            paymentData={navigationData}
+          />
+        );
+      
       case 'profile':
         return <ProfileScreen onNavigate={handleNavigate} />;
-
+      
       case 'tableMap':
-        return <TableMapScreen onNavigate={handleNavigate} initialArea={navigationData?.area} />;
-
+        return (
+          <TableMapScreen 
+            onNavigate={handleNavigate}
+            initialArea={navigationData?.area}
+          />
+        );
+      
       case 'admin':
         return <AdminDashboard onNavigate={handleNavigate} />;
-
+      
+      case 'logo':
+        return <LogoPage onNavigate={handleNavigate} />;
+      
+      case 'notifications':
+        return <NotificationScreen onNavigate={handleNavigate} />;
+      
       default:
-        return <HomeScreen onNavigate={handleNavigate} />;
     }
   };
 
-  return <div className="min-h-screen bg-white">{renderScreen()}</div>;
+  return (
+    <div className="min-h-screen bg-white">
+      {renderScreen()}
+    </div>
+  );
 }
