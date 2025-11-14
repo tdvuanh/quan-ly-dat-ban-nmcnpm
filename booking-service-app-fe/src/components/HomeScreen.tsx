@@ -81,14 +81,14 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
         </div>
 
         {/* Search Bar */}
-        <div className="relative">
+        {/* <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
           <Input
             type="text"
             placeholder="Tìm bàn trống theo ngày/giờ..."
             className="h-12 pl-12 pr-4 rounded-2xl border-gray-200 bg-gray-50"
           />
-        </div>
+        </div> */}
       </div>
 
       {/* Content */}

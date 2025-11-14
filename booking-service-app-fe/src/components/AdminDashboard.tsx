@@ -21,6 +21,8 @@ import { motion } from 'motion/react';
 import { Plus, Trash2, User, Users, Bell } from 'lucide-react';
 import type { Table } from '../data/mockData';
 
+
+
 interface AdminDashboardProps {
   onNavigate: (screen: string) => void;
 }
@@ -112,6 +114,14 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const handleDeleteTable = (tableId: string) => {
     setTables(tables.filter((t) => t.id !== tableId));
   };
+
+  const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'serving' | 'booked'>('all');
+
+  const filteredTables =
+  statusFilter === 'all'
+    ? tables
+    : tables.filter((t) => t.status === statusFilter);
+
 
   return (
     <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-orange-50 flex flex-col">
@@ -229,11 +239,64 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
           </Dialog>
         </div>
 
+                {/* Filter theo trạng thái */}
+        <div className="mt-3 flex gap-2">
+          <Button
+            variant={statusFilter === 'all' ? 'default' : 'outline'}
+            className={`flex-1 h-10 rounded-2xl ${
+              statusFilter === 'all'
+                ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                : ''
+            }`}
+            onClick={() => setStatusFilter('all')}
+          >
+            Tất cả
+          </Button>
+          <Button
+            variant={statusFilter === 'available' ? 'default' : 'outline'}
+            className={`flex-1 h-10 rounded-2xl ${
+              statusFilter === 'available'
+                ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                : ''
+            }`}
+            onClick={() => setStatusFilter('available')}
+          >
+            Trống
+          </Button>
+          <Button
+            variant={statusFilter === 'serving' ? 'default' : 'outline'}
+            className={`flex-1 h-10 rounded-2xl ${
+              statusFilter === 'serving'
+                ? 'bg-sky-500 hover:bg-sky-600 text-white'
+                : ''
+            }`}
+            onClick={() => setStatusFilter('serving')}
+          >
+            Phục vụ
+          </Button>
+          <Button
+            variant={statusFilter === 'booked' ? 'default' : 'outline'}
+            className={`flex-1 h-10 rounded-2xl ${
+              statusFilter === 'booked'
+                ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                : ''
+            }`}
+            onClick={() => setStatusFilter('booked')}
+          >
+            Đã đặt
+          </Button>
+        </div>
+
+
         {/* Tables List */}
         <div>
-          <h3 className="text-gray-900 mb-4">Danh sách bàn ({tables.length})</h3>
-          <div className="grid grid-cols-2 gap-3">
-            {tables.map((table, index) => (
+          <h3 className="text-gray-900 mb-4">
+  Danh sách bàn ({filteredTables.length}
+  {statusFilter === 'all' ? '' : ` / ${tables.length}`})
+</h3>
+<div className="grid grid-cols-2 gap-3">
+  {filteredTables.map((table, index) => (
+
               <motion.div
                 key={table.id}
                 initial={{ opacity: 0, y: 20 }}

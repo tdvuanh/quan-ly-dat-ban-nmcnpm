@@ -105,7 +105,7 @@ export function PaymentScreen({ onNavigate, bookingData }: PaymentScreenProps) {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 }}
               >
-                <Card
+                {/* <Card
                   className={`p-4 rounded-2xl cursor-pointer transition-all border-2 mb-3 ${
                     paymentMethod === 'card'
                       ? 'border-orange-500 bg-orange-50'
@@ -125,7 +125,7 @@ export function PaymentScreen({ onNavigate, bookingData }: PaymentScreenProps) {
                       <p className="text-xs text-gray-500">Visa, Mastercard, JCB</p>
                     </div>
                   </div>
-                </Card>
+                </Card> */}
               </motion.div>
 
               <motion.div
@@ -133,7 +133,7 @@ export function PaymentScreen({ onNavigate, bookingData }: PaymentScreenProps) {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                <Card
+                {/* <Card
                   className={`p-4 rounded-2xl cursor-pointer transition-all border-2 mb-3 ${
                     paymentMethod === 'momo'
                       ? 'border-orange-500 bg-orange-50'
@@ -153,7 +153,7 @@ export function PaymentScreen({ onNavigate, bookingData }: PaymentScreenProps) {
                       <p className="text-xs text-gray-500">Thanh toán qua ví điện tử</p>
                     </div>
                   </div>
-                </Card>
+                </Card> */}
               </motion.div>
 
               <motion.div
