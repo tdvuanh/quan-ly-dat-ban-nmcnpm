@@ -369,13 +369,13 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
               Danh sách bàn
               <span className="text-sm text-gray-500 ml-2">({filteredTables.length} bàn)</span>
             </p>
-            <button
+            {/* <button
               onClick={() => onNavigate('tableMap')}
               className="text-sm text-orange-600 flex items-center gap-1"
             >
               <MapPin className="w-4 h-4" />
               Xem sơ đồ
-            </button>
+            </button> */}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
