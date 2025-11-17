@@ -13,18 +13,18 @@ interface TableMapScreenProps {
 export function TableMapScreen({ onNavigate, initialArea }: TableMapScreenProps) {
   const [selectedArea, setSelectedArea] = useState(initialArea || 'floor1');
 
-  const areaTables = tables.filter((t) => t.area === selectedArea);
+  const areaTables = tables.filter(t => t.area === selectedArea);
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'available':
-        return 'bg-green-500 hover:bg-green-600';
+        return 'bg-green-500 hover:bg-green-600 cursor-pointer';
       case 'booked':
-        return 'bg-orange-500 hover:bg-orange-600';
+        return 'bg-orange-500';
       case 'serving':
-        return 'bg-blue-500 hover:bg-blue-600';
+        return 'bg-blue-500';
       case 'cleaning':
-        return 'bg-gray-500 hover:bg-gray-600';
+        return 'bg-yellow-500';
       default:
         return 'bg-gray-500';
     }
@@ -32,21 +32,16 @@ export function TableMapScreen({ onNavigate, initialArea }: TableMapScreenProps)
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'available':
-        return 'Trống';
-      case 'booked':
-        return 'Đã đặt';
-      case 'serving':
-        return 'Phục vụ';
-      case 'cleaning':
-        return 'Dọn dẹp';
-      default:
-        return status;
+      case 'available': return 'Trống';
+      case 'booked': return 'Đã đặt';
+      case 'serving': return 'Phục vụ';
+      case 'cleaning': return 'Đang dọn';
+      default: return status;
     }
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-orange-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex flex-col">
       {/* Header */}
       <div className="bg-white shadow-sm px-6 py-4">
         <div className="flex items-center justify-between mb-4">
@@ -71,7 +66,7 @@ export function TableMapScreen({ onNavigate, initialArea }: TableMapScreenProps)
             <button
               key={area.id}
               onClick={() => setSelectedArea(area.id)}
-              className={`shrink-0 px-4 py-2 rounded-2xl transition-all flex items-center gap-2 ${
+              className={`flex-shrink-0 px-4 py-2 rounded-2xl transition-all flex items-center gap-2 ${
                 selectedArea === area.id
                   ? 'bg-orange-500 text-white shadow-md'
                   : 'bg-white text-gray-600 border border-gray-200'
@@ -118,8 +113,8 @@ export function TableMapScreen({ onNavigate, initialArea }: TableMapScreenProps)
           {/* Area label */}
           <div className="text-center mb-8">
             <p className="text-gray-400 text-sm">
-              {areas.find((a) => a.id === selectedArea)?.icon}{' '}
-              {areas.find((a) => a.id === selectedArea)?.name}
+              {areas.find(a => a.id === selectedArea)?.icon}{' '}
+              {areas.find(a => a.id === selectedArea)?.name}
             </p>
           </div>
 
@@ -136,19 +131,22 @@ export function TableMapScreen({ onNavigate, initialArea }: TableMapScreenProps)
                 <button
                   onClick={() => {
                     if (table.status === 'available') {
-                      onNavigate('booking');
+                      onNavigate('booking', { tableId: table.id });
                     }
                   }}
-                  className={`w-20 h-20 rounded-2xl ${getStatusColor(table.status)} text-white shadow-lg transition-all transform hover:scale-110 flex flex-col items-center justify-center ${
-                    table.status !== 'available' ? 'cursor-not-allowed opacity-75' : ''
-                  }`}
+                  className={`w-20 h-20 rounded-2xl ${getStatusColor(table.status)} text-white shadow-lg transition-all transform ${
+                    table.status === 'available' ? 'hover:scale-110' : 'cursor-not-allowed opacity-75'
+                  } flex flex-col items-center justify-center`}
                 >
                   <span className="text-lg mb-1">🪑</span>
-                  <span className="text-xs">{table.number}</span>
+                  <span className="text-xs">{table.code}</span>
                 </button>
                 <div className="mt-2 text-center">
                   <p className="text-xs text-gray-600">{table.capacity} người</p>
-                  <Badge variant="outline" className="text-xs mt-1 border-gray-200">
+                  <Badge
+                    variant="outline"
+                    className="text-xs mt-1 border-gray-200"
+                  >
                     {getStatusText(table.status)}
                   </Badge>
                 </div>
@@ -169,7 +167,7 @@ export function TableMapScreen({ onNavigate, initialArea }: TableMapScreenProps)
       <div className="bg-white border-t border-gray-100 px-6 py-4">
         <Button
           onClick={() => onNavigate('booking')}
-          className="w-full h-12 bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl"
+          className="w-full h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl"
         >
           Đặt bàn ngay
         </Button>

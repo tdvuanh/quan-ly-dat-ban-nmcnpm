@@ -2,7 +2,8 @@ import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { motion } from 'motion/react';
-import { CheckCircle, Home, Receipt, Share2 } from 'lucide-react';
+import { CheckCircle, Home, Receipt } from 'lucide-react';
+import { Footer } from './Footer';
 
 interface PaymentSuccessScreenProps {
   onNavigate: (screen: string) => void;
@@ -11,31 +12,17 @@ interface PaymentSuccessScreenProps {
 
 export function PaymentSuccessScreen({ onNavigate, paymentData }: PaymentSuccessScreenProps) {
   const bookingCode = `BK${Date.now().toString().slice(-6)}`;
-  const currentDate = new Date().toLocaleDateString('vi-VN');
-  const currentTime = new Date().toLocaleTimeString('vi-VN', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const now = new Date();
+  const currentTime = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  const currentDate = now.toLocaleDateString('vi-VN');
+  const formattedDateTime = `${currentTime} ${currentDate}`;
 
   const getPaymentMethodText = (method: string) => {
     switch (method) {
-      case 'card':
-        return 'Thẻ tín dụng/ghi nợ';
-      case 'momo':
-        return 'Ví MoMo';
-      case 'banking':
-        return 'Chuyển khoản ngân hàng';
-      default:
-        return method;
-    }
-  };
-
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: 'Xác nhận đặt bàn',
-        text: `Mã đặt bàn: ${bookingCode}\nBàn ${paymentData?.tableNumber}\nĐã thanh toán: ${paymentData?.amount?.toLocaleString('vi-VN')}đ`,
-      });
+      case 'card': return 'Thẻ tín dụng/ghi nợ';
+      case 'momo': return 'Ví MoMo';
+      case 'banking': return 'Chuyển khoản ngân hàng';
+      default: return method;
     }
   };
 
@@ -106,9 +93,7 @@ export function PaymentSuccessScreen({ onNavigate, paymentData }: PaymentSuccess
 
               <div className="flex justify-between items-center pt-2">
                 <span className="text-gray-600">Phương thức</span>
-                <span className="text-gray-900">
-                  {getPaymentMethodText(paymentData?.paymentMethod)}
-                </span>
+                <span className="text-gray-900">{getPaymentMethodText(paymentData?.paymentMethod)}</span>
               </div>
             </div>
 
@@ -124,15 +109,6 @@ export function PaymentSuccessScreen({ onNavigate, paymentData }: PaymentSuccess
 
           {/* Actions */}
           <div className="space-y-3">
-            <Button
-              onClick={handleShare}
-              variant="outline"
-              className="w-full h-12 rounded-2xl border-2 border-gray-200 hover:bg-gray-50"
-            >
-              <Share2 className="w-5 h-5 mr-2" />
-              Chia sẻ
-            </Button>
-
             <Button
               onClick={() => onNavigate('home')}
               className="w-full h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl"
@@ -153,8 +129,7 @@ export function PaymentSuccessScreen({ onNavigate, paymentData }: PaymentSuccess
           <Card className="mt-6 p-4 rounded-2xl bg-blue-50 border-blue-100">
             <p className="text-sm text-blue-900 mb-1">📱 Thông tin quan trọng</p>
             <p className="text-xs text-blue-700 mb-2">
-              Vui lòng lưu lại mã đặt bàn <span className="font-medium">{bookingCode}</span> để xuất
-              trình khi đến nhà hàng.
+              Vui lòng lưu lại mã đặt bàn <span className="font-medium">{bookingCode}</span> để xuất trình khi đến nhà hàng.
             </p>
             <p className="text-xs text-blue-700">
               Liên hệ: <span className="font-medium">1900 1234</span> nếu cần hỗ trợ.
@@ -162,6 +137,7 @@ export function PaymentSuccessScreen({ onNavigate, paymentData }: PaymentSuccess
           </Card>
         </motion.div>
       </div>
+      <Footer />
     </div>
   );
 }
