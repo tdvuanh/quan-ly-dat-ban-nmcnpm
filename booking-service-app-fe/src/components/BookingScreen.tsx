@@ -28,22 +28,22 @@ export function BookingScreen({ onNavigate, initialData }: BookingScreenProps) {
   const [duration, setDuration] = useState(1); // Default 1 hour
   const [guests, setGuests] = useState(2);
   const [notes, setNotes] = useState('');
-  
+
   // Customer info
   const [customerName, setCustomerName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneValidationError, setPhoneValidationError] = useState('');
-  
+
   const { showInfo } = useNotification();
 
-  const availableTables = tables.filter(t => t.status === 'available');
-  const selectedTable = tables.find(t => t.id === selectedTableId);
+  const availableTables = tables.filter((t) => t.status === 'available');
+  const selectedTable = tables.find((t) => t.id === selectedTableId);
   const timeSlots = generateTimeSlots();
-  
+
   // Update guests when table is selected
   const handleTableSelect = (tableId: string) => {
     setSelectedTableId(tableId);
-    const table = tables.find(t => t.id === tableId);
+    const table = tables.find((t) => t.id === tableId);
     if (table) {
       // Set guests to default 2 or table capacity, whichever is smaller
       setGuests(Math.min(2, table.capacity));
@@ -64,14 +64,15 @@ export function BookingScreen({ onNavigate, initialData }: BookingScreenProps) {
     // Validate số lượng khách không vượt quá sức chứa
     if (selectedTable && guests > selectedTable.capacity) {
       showInfo(
-        'Vượt quá sức chứa', 
+        'Vượt quá sức chứa',
         `Bàn ${selectedTable.code} chỉ chứa tối đa ${selectedTable.capacity} người`
       );
       return;
     }
-    
-    const areaName = areas.find(a => a.id === selectedTable?.area)?.name || selectedTable?.area || '';
-    
+
+    const areaName =
+      areas.find((a) => a.id === selectedTable?.area)?.name || selectedTable?.area || '';
+
     const bookingData = {
       tableId: selectedTableId,
       tableCode: selectedTable?.code,
@@ -83,7 +84,7 @@ export function BookingScreen({ onNavigate, initialData }: BookingScreenProps) {
       guests,
       notes,
       customerName,
-      phoneNumber
+      phoneNumber,
     };
     onNavigate('confirmation', bookingData);
   };
@@ -116,7 +117,7 @@ export function BookingScreen({ onNavigate, initialData }: BookingScreenProps) {
             {/* Customer Information */}
             <Card className="p-6 rounded-3xl shadow-sm">
               <h3 className="text-gray-900 mb-4">Thông tin khách hàng</h3>
-              
+
               <div className="space-y-4">
                 {/* Name */}
                 <div className="space-y-2">
@@ -147,7 +148,7 @@ export function BookingScreen({ onNavigate, initialData }: BookingScreenProps) {
                     onChange={(e) => {
                       const value = e.target.value;
                       setPhoneNumber(value);
-                      
+
                       // Kiểm tra liên tục khi nhập
                       if (!value) {
                         setPhoneValidationError('');
@@ -184,21 +185,25 @@ export function BookingScreen({ onNavigate, initialData }: BookingScreenProps) {
                     <Users className="w-4 h-4 text-orange-500" />
                     Số lượng khách
                   </Label>
-                  <Select 
-                    value={String(guests)} 
+                  <Select
+                    value={String(guests)}
                     onValueChange={(value) => setGuests(Number(value))}
                     disabled={!selectedTable}
                   >
                     <SelectTrigger className="h-12 rounded-2xl border-gray-200">
-                      <SelectValue placeholder={selectedTable ? "Chọn số người" : "Chọn bàn trước"} />
+                      <SelectValue
+                        placeholder={selectedTable ? 'Chọn số người' : 'Chọn bàn trước'}
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {selectedTable ? (
-                        Array.from({ length: selectedTable.capacity }, (_, i) => i + 1).map((num) => (
-                          <SelectItem key={num} value={String(num)}>
-                            {num} người
-                          </SelectItem>
-                        ))
+                        Array.from({ length: selectedTable.capacity }, (_, i) => i + 1).map(
+                          (num) => (
+                            <SelectItem key={num} value={String(num)}>
+                              {num} người
+                            </SelectItem>
+                          )
+                        )
                       ) : (
                         <SelectItem value="0" disabled>
                           Vui lòng chọn bàn trước
@@ -216,7 +221,7 @@ export function BookingScreen({ onNavigate, initialData }: BookingScreenProps) {
             {/* Date and Time Selection */}
             <Card className="p-6 rounded-3xl shadow-sm">
               <h3 className="text-gray-900 mb-4">Thời gian đặt bàn</h3>
-              
+
               <div className="space-y-4">
                 {/* Date */}
                 <div className="space-y-2">
@@ -263,7 +268,7 @@ export function BookingScreen({ onNavigate, initialData }: BookingScreenProps) {
                       <SelectValue placeholder="Chọn giờ" />
                     </SelectTrigger>
                     <SelectContent>
-                      {timeSlots.map(slot => (
+                      {timeSlots.map((slot) => (
                         <SelectItem key={slot} value={slot}>
                           {slot}
                         </SelectItem>
@@ -326,7 +331,7 @@ export function BookingScreen({ onNavigate, initialData }: BookingScreenProps) {
             ) : (
               <div className="grid grid-cols-2 gap-3">
                 {availableTables.map((table, index) => {
-                  const areaName = areas.find(a => a.id === table.area)?.name || table.area;
+                  const areaName = areas.find((a) => a.id === table.area)?.name || table.area;
                   return (
                     <motion.div
                       key={table.id}
@@ -349,8 +354,18 @@ export function BookingScreen({ onNavigate, initialData }: BookingScreenProps) {
                           </div>
                           {selectedTableId === table.id && (
                             <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center">
-                              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              <svg
+                                className="w-4 h-4 text-white"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5 13l4 4L19 7"
+                                />
                               </svg>
                             </div>
                           )}

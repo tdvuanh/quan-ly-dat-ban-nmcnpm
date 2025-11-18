@@ -68,12 +68,12 @@ export function NotificationPopup({ isOpen, onClose, anchorRef }: NotificationPo
   const popupRef = useRef<HTMLDivElement>(null);
   const [notifications, setNotifications] = useState(mockNotifications);
 
-  const newCount = notifications.filter(n => n.isNew).length;
+  const newCount = notifications.filter((n) => n.isNew).length;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        popupRef.current && 
+        popupRef.current &&
         !popupRef.current.contains(event.target as Node) &&
         anchorRef.current &&
         !anchorRef.current.contains(event.target as Node)
@@ -119,11 +119,11 @@ export function NotificationPopup({ isOpen, onClose, anchorRef }: NotificationPo
   };
 
   const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, isNew: false })));
+    setNotifications((prev) => prev.map((n) => ({ ...n, isNew: false })));
   };
 
   const deleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
   return (
@@ -171,9 +171,7 @@ export function NotificationPopup({ isOpen, onClose, anchorRef }: NotificationPo
                   <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-3">
                     <Bell className="w-8 h-8 text-gray-400" />
                   </div>
-                  <p className="text-sm text-gray-600 text-center">
-                    Bạn chưa có thông báo nào
-                  </p>
+                  <p className="text-sm text-gray-600 text-center">Bạn chưa có thông báo nào</p>
                 </div>
               ) : (
                 <div className="divide-y divide-gray-100">
@@ -188,16 +186,16 @@ export function NotificationPopup({ isOpen, onClose, anchorRef }: NotificationPo
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <div className={`w-10 h-10 rounded-xl ${getNotificationBgColor(notification.type)} flex items-center justify-center flex-shrink-0`}>
+                        <div
+                          className={`w-10 h-10 rounded-xl ${getNotificationBgColor(notification.type)} flex items-center justify-center flex-shrink-0`}
+                        >
                           {getNotificationIcon(notification.type)}
                         </div>
-                        
+
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2 mb-1">
                             <div className="flex items-center gap-2">
-                              <p className="text-sm text-gray-900">
-                                {notification.title}
-                              </p>
+                              <p className="text-sm text-gray-900">{notification.title}</p>
                               {notification.isNew && (
                                 <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
                               )}
@@ -209,14 +207,12 @@ export function NotificationPopup({ isOpen, onClose, anchorRef }: NotificationPo
                               <Trash2 className="w-3.5 h-3.5 text-gray-500" />
                             </button>
                           </div>
-                          
+
                           <p className="text-xs text-gray-600 mb-2 line-clamp-2">
                             {notification.message}
                           </p>
-                          
-                          <p className="text-xs text-gray-400">
-                            {notification.time}
-                          </p>
+
+                          <p className="text-xs text-gray-400">{notification.time}</p>
                         </div>
                       </div>
                     </motion.div>

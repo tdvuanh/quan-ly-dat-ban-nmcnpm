@@ -26,12 +26,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const showToast = (type: ToastType, title: string, message?: string, duration = 3000) => {
     const id = Date.now().toString();
     const newToast: Toast = { id, type, title, message, duration };
-    
-    setToasts(prev => [...prev, newToast]);
+
+    setToasts((prev) => [...prev, newToast]);
 
     // Auto remove after duration
     setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
+      setToasts((prev) => prev.filter((t) => t.id !== id));
     }, duration);
   };
 
@@ -48,7 +48,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   };
 
   const removeToast = (id: string) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
+    setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
   const getStyles = (type: ToastType) => {
@@ -67,11 +67,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   return (
     <NotificationContext.Provider value={{ showToast, showSuccess, showError, showInfo }}>
       {children}
-      
+
       {/* Toast Container */}
       <div className="fixed top-4 right-4 z-[9999] space-y-2 max-w-sm">
         <AnimatePresence>
-          {toasts.map(toast => (
+          {toasts.map((toast) => (
             <motion.div
               key={toast.id}
               initial={{ opacity: 0, y: -20, x: 100 }}
@@ -82,9 +82,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <p className="text-gray-900 mb-0.5">{toast.title}</p>
-                  {toast.message && (
-                    <p className="text-sm text-gray-600">{toast.message}</p>
-                  )}
+                  {toast.message && <p className="text-sm text-gray-600">{toast.message}</p>}
                 </div>
               </div>
             </motion.div>

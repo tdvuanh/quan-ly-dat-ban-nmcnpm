@@ -43,7 +43,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
   const [searchDate, setSearchDate] = useState('2025-11-04');
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationButtonRef = useRef<HTMLButtonElement>(null);
-  
+
   // Available Hours Dialog State
   const [isAvailableHoursDialogOpen, setIsAvailableHoursDialogOpen] = useState(false);
   const [selectedTableForHours, setSelectedTableForHours] = useState<any>(null);
@@ -68,16 +68,21 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'available': return 'Trống';
-      case 'booked': return 'Đã đặt';
-      case 'serving': return 'Đang phục vụ';
-      case 'cleaning': return 'Dọn dẹp';
-      default: return status;
+      case 'available':
+        return 'Trống';
+      case 'booked':
+        return 'Đã đặt';
+      case 'serving':
+        return 'Đang phục vụ';
+      case 'cleaning':
+        return 'Dọn dẹp';
+      default:
+        return status;
     }
   };
 
-  const availableTablesCount = tables.filter(t => t.status === 'available').length;
-  const bookedTablesCount = tables.filter(t => t.status === 'booked').length;
+  const availableTablesCount = tables.filter((t) => t.status === 'available').length;
+  const bookedTablesCount = tables.filter((t) => t.status === 'booked').length;
 
   return (
     <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-orange-50 flex flex-col">
@@ -94,7 +99,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
             </div>
           </div>
           <div className="flex gap-2">
-            <button 
+            <button
               onClick={() => setShowNotifications(!showNotifications)}
               ref={notificationButtonRef}
               className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors relative"
@@ -102,7 +107,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
               <Bell className="w-5 h-5 text-gray-600" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full"></span>
             </button>
-            <button 
+            <button
               onClick={() => onNavigate('profile')}
               className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center hover:bg-orange-200 transition-colors"
             >
@@ -143,7 +148,9 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Đặt hôm nay</p>
-                  <p className="text-xs text-gray-400 mb-1">{new Date().toLocaleDateString('vi-VN')}</p>
+                  <p className="text-xs text-gray-400 mb-1">
+                    {new Date().toLocaleDateString('vi-VN')}
+                  </p>
                   <p className="text-orange-600">{bookedTablesCount} bàn</p>
                 </div>
                 <div className="w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center">
@@ -175,9 +182,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
           <div className="flex items-center justify-between mb-3">
             <p className="text-gray-900">
               Danh sách bàn
-              <span className="text-sm text-gray-500 ml-2">
-                ({filteredTables.length} bàn)
-              </span>
+              <span className="text-sm text-gray-500 ml-2">({filteredTables.length} bàn)</span>
             </p>
           </div>
 
@@ -254,9 +259,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
         <DialogContent className="rounded-3xl max-w-md">
           <DialogHeader>
             <DialogTitle>Giờ trống - Bàn {selectedTableForHours?.code}</DialogTitle>
-            <DialogDescription>
-              Thời gian hoạt động: 10:00 - 22:00
-            </DialogDescription>
+            <DialogDescription>Thời gian hoạt động: 10:00 - 22:00</DialogDescription>
           </DialogHeader>
 
           <div className="py-4">
@@ -280,9 +283,10 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
                     }}
                     className={`
                       px-3 py-2 rounded-lg text-sm transition-all
-                      ${isBooked 
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50' 
-                        : 'bg-gradient-to-r from-green-50 to-green-100 text-green-700 hover:from-green-100 hover:to-green-200 hover:shadow-md cursor-pointer border-2 border-green-200'
+                      ${
+                        isBooked
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
+                          : 'bg-gradient-to-r from-green-50 to-green-100 text-green-700 hover:from-green-100 hover:to-green-200 hover:shadow-md cursor-pointer border-2 border-green-200'
                       }
                     `}
                   >

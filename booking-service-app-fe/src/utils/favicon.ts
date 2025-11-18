@@ -4,7 +4,7 @@ export function setFavicon() {
   const size = 64;
   canvas.width = size;
   canvas.height = size;
-  
+
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
@@ -12,7 +12,7 @@ export function setFavicon() {
   const gradient = ctx.createLinearGradient(0, 0, size, size);
   gradient.addColorStop(0, '#f97316');
   gradient.addColorStop(1, '#ea580c');
-  
+
   // Draw rounded rectangle background
   const radius = size * 0.25;
   ctx.fillStyle = gradient;
@@ -37,11 +37,11 @@ export function setFavicon() {
 
   // Convert to data URL and set as favicon
   const faviconUrl = canvas.toDataURL('image/png');
-  
+
   // Remove existing favicons
   const existingFavicons = document.querySelectorAll('link[rel*="icon"]');
-  existingFavicons.forEach(favicon => favicon.remove());
-  
+  existingFavicons.forEach((favicon) => favicon.remove());
+
   // Add new favicon
   const link = document.createElement('link');
   link.type = 'image/png';

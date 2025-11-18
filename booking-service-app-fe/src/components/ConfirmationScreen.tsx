@@ -2,7 +2,17 @@ import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { motion } from 'motion/react';
-import { CheckCircle, Users, CreditCard, Home, ArrowLeft, Calendar, Clock, MapPin, MessageSquare } from 'lucide-react';
+import {
+  CheckCircle,
+  Users,
+  CreditCard,
+  Home,
+  ArrowLeft,
+  Calendar,
+  Clock,
+  MapPin,
+  MessageSquare,
+} from 'lucide-react';
 import { Footer } from './Footer';
 
 interface ConfirmationScreenProps {
@@ -11,7 +21,6 @@ interface ConfirmationScreenProps {
 }
 
 export function ConfirmationScreen({ onNavigate, bookingData }: ConfirmationScreenProps) {
-
   return (
     <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-orange-50 flex flex-col">
       {/* Header */}
@@ -47,18 +56,14 @@ export function ConfirmationScreen({ onNavigate, bookingData }: ConfirmationScre
               <CheckCircle className="w-12 h-12 text-white" />
             </motion.div>
             <h2 className="text-green-600 mb-2">Đã chọn bàn thành công!</h2>
-            <p className="text-gray-600">
-              Vui lòng tiến hành thanh toán để hoàn tất đặt bàn
-            </p>
+            <p className="text-gray-600">Vui lòng tiến hành thanh toán để hoàn tất đặt bàn</p>
           </div>
 
           {/* Booking Summary */}
           <Card className="p-6 rounded-3xl shadow-lg mb-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-gray-900">Thông tin đặt bàn</h3>
-              <Badge className="bg-orange-100 text-orange-700 border-orange-200">
-                Đang chờ
-              </Badge>
+              <Badge className="bg-orange-100 text-orange-700 border-orange-200">Đang chờ</Badge>
             </div>
 
             <div className="space-y-4">
@@ -121,7 +126,9 @@ export function ConfirmationScreen({ onNavigate, bookingData }: ConfirmationScre
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Giờ đặt</p>
-                    <p className="text-gray-900">{bookingData?.time} ({bookingData?.duration}h)</p>
+                    <p className="text-gray-900">
+                      {bookingData?.time} ({bookingData?.duration}h)
+                    </p>
                   </div>
                 </div>
 

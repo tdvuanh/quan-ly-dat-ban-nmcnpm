@@ -14,15 +14,15 @@ import { NotificationScreen } from './components/NotificationScreen';
 import { setFavicon, setDocumentTitle } from './utils/favicon';
 import { NotificationProvider } from './context/NotificationContext';
 
-type Screen = 
-  | 'splash' 
-  | 'login' 
-  | 'home' 
-  | 'booking' 
+type Screen =
+  | 'splash'
+  | 'login'
+  | 'home'
+  | 'booking'
   | 'confirmation'
   | 'payment'
   | 'paymentSuccess'
-  | 'profile' 
+  | 'profile'
   | 'tableMap'
   | 'admin'
   | 'logo'
@@ -59,74 +59,47 @@ export default function App() {
     switch (currentScreen) {
       case 'splash':
         return <SplashScreen onFinish={() => setCurrentScreen('login')} />;
-      
+
       case 'login':
         return <LoginScreen onLogin={handleLogin} />;
-      
+
       case 'home':
         return <HomeScreen onNavigate={handleNavigate} />;
-      
+
       case 'booking':
-        return (
-          <BookingScreen 
-            onNavigate={handleNavigate} 
-            initialData={bookingData}
-          />
-        );
-      
+        return <BookingScreen onNavigate={handleNavigate} initialData={bookingData} />;
+
       case 'confirmation':
-        return (
-          <ConfirmationScreen 
-            onNavigate={handleNavigate} 
-            bookingData={bookingData}
-          />
-        );
-      
+        return <ConfirmationScreen onNavigate={handleNavigate} bookingData={bookingData} />;
+
       case 'payment':
-        return (
-          <PaymentScreen 
-            onNavigate={handleNavigate} 
-            bookingData={bookingData}
-          />
-        );
-      
+        return <PaymentScreen onNavigate={handleNavigate} bookingData={bookingData} />;
+
       case 'paymentSuccess':
-        return (
-          <PaymentSuccessScreen 
-            onNavigate={handleNavigate} 
-            paymentData={bookingData}
-          />
-        );
-      
+        return <PaymentSuccessScreen onNavigate={handleNavigate} paymentData={bookingData} />;
+
       case 'profile':
         return <ProfileScreen onNavigate={handleNavigate} />;
-      
+
       case 'tableMap':
-        return (
-          <TableMapScreen 
-            onNavigate={handleNavigate}
-            initialArea={bookingData?.area}
-          />
-        );
-      
+        return <TableMapScreen onNavigate={handleNavigate} initialArea={bookingData?.area} />;
+
       case 'admin':
         return <AdminDashboard onNavigate={handleNavigate} />;
-      
+
       case 'logo':
         return <LogoPage onNavigate={handleNavigate} />;
-      
+
       case 'notifications':
         return <NotificationScreen onNavigate={handleNavigate} />;
-      
+
       default:
     }
   };
 
   return (
     <div className="min-h-screen bg-white">
-      <NotificationProvider>
-        {renderScreen()}
-      </NotificationProvider>
+      <NotificationProvider>{renderScreen()}</NotificationProvider>
     </div>
   );
 }

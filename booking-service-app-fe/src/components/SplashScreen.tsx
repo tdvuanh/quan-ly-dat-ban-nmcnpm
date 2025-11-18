@@ -28,7 +28,7 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
           <div className="w-24 h-24 bg-linear-to-br from-orange-500 to-orange-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
             <span className="text-5xl">🍽️</span>
           </div>
-          
+
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -37,7 +37,7 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
           >
             Quản Lý Đặt Bàn
           </motion.h1>
-          
+
           <motion.p
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -47,7 +47,7 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
             Đặt bàn nhanh – Ăn ngon trọn vị
           </motion.p>
         </motion.div>
-        
+
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -55,13 +55,22 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
           className="mt-12"
         >
           <div className="flex space-x-2">
-            <div className="w-2 h-2 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-2 h-2 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-2 h-2 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            <div
+              className="w-2 h-2 bg-orange-400 rounded-full animate-bounce"
+              style={{ animationDelay: '0ms' }}
+            ></div>
+            <div
+              className="w-2 h-2 bg-orange-400 rounded-full animate-bounce"
+              style={{ animationDelay: '150ms' }}
+            ></div>
+            <div
+              className="w-2 h-2 bg-orange-400 rounded-full animate-bounce"
+              style={{ animationDelay: '300ms' }}
+            ></div>
           </div>
         </motion.div>
       </div>
-      
+
       {/* Footer - bottom */}
       <Footer />
     </div>

@@ -28,9 +28,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
         >
           <div className="text-center mb-12">
             <h1 className="text-gray-900 mb-2">Quản Lý Đặt Bàn</h1>
-            <p className="text-gray-600">
-              Chọn vai trò để tiếp tục
-            </p>
+            <p className="text-gray-600">Chọn vai trò để tiếp tục</p>
           </div>
 
           <div className="space-y-4">

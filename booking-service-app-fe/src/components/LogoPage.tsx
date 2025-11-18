@@ -34,7 +34,7 @@ export function LogoPage({ onNavigate }: LogoPageProps) {
     const canvas = document.createElement('canvas');
     canvas.width = size;
     canvas.height = size;
-    
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -42,7 +42,7 @@ export function LogoPage({ onNavigate }: LogoPageProps) {
     const gradient = ctx.createLinearGradient(0, 0, size, size);
     gradient.addColorStop(0, '#f97316');
     gradient.addColorStop(1, '#ea580c');
-    
+
     // Draw rounded rectangle background
     const radius = size * 0.2;
     ctx.fillStyle = gradient;
@@ -56,14 +56,18 @@ export function LogoPage({ onNavigate }: LogoPageProps) {
     ctx.fillText('🍽️', size / 2, size / 2);
 
     // Download
-    canvas.toBlob((blob) => {
-      if (!blob) return;
-      const link = document.createElement('a');
-      link.download = filename;
-      link.href = URL.createObjectURL(blob);
-      link.click();
-      URL.revokeObjectURL(link.href);
-    }, 'image/png', 1);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return;
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        URL.revokeObjectURL(link.href);
+      },
+      'image/png',
+      1
+    );
   };
 
   // Download horizontal logo
@@ -71,7 +75,7 @@ export function LogoPage({ onNavigate }: LogoPageProps) {
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
-    
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -88,7 +92,7 @@ export function LogoPage({ onNavigate }: LogoPageProps) {
     const gradient = ctx.createLinearGradient(iconX, iconY, iconX + iconSize, iconY + iconSize);
     gradient.addColorStop(0, '#f97316');
     gradient.addColorStop(1, '#ea580c');
-    
+
     // Draw icon background
     const radius = iconSize * 0.2;
     ctx.fillStyle = gradient;
@@ -104,7 +108,7 @@ export function LogoPage({ onNavigate }: LogoPageProps) {
     // Add text
     const textX = iconX + iconSize + width * 0.05;
     const textY = height / 2;
-    
+
     ctx.fillStyle = '#ea580c';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
@@ -112,14 +116,18 @@ export function LogoPage({ onNavigate }: LogoPageProps) {
     ctx.fillText('Nhà Hàng Gì Cũng Được', textX, textY);
 
     // Download
-    canvas.toBlob((blob) => {
-      if (!blob) return;
-      const link = document.createElement('a');
-      link.download = filename;
-      link.href = URL.createObjectURL(blob);
-      link.click();
-      URL.revokeObjectURL(link.href);
-    }, 'image/png', 1);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return;
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        URL.revokeObjectURL(link.href);
+      },
+      'image/png',
+      1
+    );
   };
 
   // Download full logo with tagline
@@ -127,7 +135,7 @@ export function LogoPage({ onNavigate }: LogoPageProps) {
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
-    
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -144,7 +152,7 @@ export function LogoPage({ onNavigate }: LogoPageProps) {
     const gradient = ctx.createLinearGradient(iconX, iconY, iconX + iconSize, iconY + iconSize);
     gradient.addColorStop(0, '#f97316');
     gradient.addColorStop(1, '#ea580c');
-    
+
     // Draw icon background
     const radius = iconSize * 0.2;
     ctx.fillStyle = gradient;
@@ -169,25 +177,25 @@ export function LogoPage({ onNavigate }: LogoPageProps) {
     ctx.fillText('Đặt bàn nhanh – Ăn ngon trọn vị', width / 2, iconY + iconSize + height * 0.18);
 
     // Download
-    canvas.toBlob((blob) => {
-      if (!blob) return;
-      const link = document.createElement('a');
-      link.download = filename;
-      link.href = URL.createObjectURL(blob);
-      link.click();
-      URL.revokeObjectURL(link.href);
-    }, 'image/png', 1);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return;
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        URL.revokeObjectURL(link.href);
+      },
+      'image/png',
+      1
+    );
   };
 
   return (
     <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-orange-50">
       {/* Header */}
       <div className="bg-white shadow-sm px-6 py-4 flex items-center justify-between">
-        <Button
-          variant="ghost"
-          onClick={() => onNavigate('home')}
-          className="rounded-full"
-        >
+        <Button variant="ghost" onClick={() => onNavigate('home')} className="rounded-full">
           <ArrowLeft className="w-5 h-5 mr-2" />
           Quay lại
         </Button>
@@ -235,7 +243,10 @@ export function LogoPage({ onNavigate }: LogoPageProps) {
                 <Download className="w-4 h-4" />
               </Button>
             </div>
-            <div id="icon-large" className="bg-linear-to-br from-orange-50 to-white rounded-2xl p-8 flex items-center justify-center">
+            <div
+              id="icon-large"
+              className="bg-linear-to-br from-orange-50 to-white rounded-2xl p-8 flex items-center justify-center"
+            >
               <div className="w-32 h-32 bg-linear-to-br from-orange-500 to-orange-600 rounded-[32px] flex items-center justify-center shadow-xl">
                 <span className="text-7xl">🍽️</span>
               </div>
@@ -255,7 +266,10 @@ export function LogoPage({ onNavigate }: LogoPageProps) {
                 <Download className="w-4 h-4" />
               </Button>
             </div>
-            <div id="logo-horizontal" className="bg-linear-to-br from-orange-50 to-white rounded-2xl p-8 flex items-center justify-center">
+            <div
+              id="logo-horizontal"
+              className="bg-linear-to-br from-orange-50 to-white rounded-2xl p-8 flex items-center justify-center"
+            >
               <div className="flex items-center gap-4">
                 <div className="w-20 h-20 bg-linear-to-br from-orange-500 to-orange-600 rounded-[20px] flex items-center justify-center shadow-lg">
                   <span className="text-5xl">🍽️</span>
@@ -281,7 +295,10 @@ export function LogoPage({ onNavigate }: LogoPageProps) {
                 <Download className="w-4 h-4" />
               </Button>
             </div>
-            <div id="logo-dark" className="bg-gray-900 rounded-2xl p-8 flex items-center justify-center">
+            <div
+              id="logo-dark"
+              className="bg-gray-900 rounded-2xl p-8 flex items-center justify-center"
+            >
               <div className="flex items-center gap-3">
                 <div className="w-16 h-16 bg-linear-to-br from-orange-500 to-orange-600 rounded-[16px] flex items-center justify-center shadow-lg">
                   <span className="text-4xl">🍽️</span>
@@ -304,7 +321,10 @@ export function LogoPage({ onNavigate }: LogoPageProps) {
                 <Download className="w-4 h-4" />
               </Button>
             </div>
-            <div id="icon-small" className="bg-linear-to-br from-orange-50 to-white rounded-2xl p-8 flex items-center justify-center gap-4">
+            <div
+              id="icon-small"
+              className="bg-linear-to-br from-orange-50 to-white rounded-2xl p-8 flex items-center justify-center gap-4"
+            >
               <div className="w-16 h-16 bg-linear-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
                 <span className="text-3xl">🍽️</span>
               </div>
@@ -427,7 +447,9 @@ export function LogoPage({ onNavigate }: LogoPageProps) {
                 <span className="text-red-600">✗</span>
               </div>
               <div>
-                <p className="mb-1">Không thay đổi màu sắc hoặc thêm hiệu ứng không được phê duyệt</p>
+                <p className="mb-1">
+                  Không thay đổi màu sắc hoặc thêm hiệu ứng không được phê duyệt
+                </p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -444,11 +466,9 @@ export function LogoPage({ onNavigate }: LogoPageProps) {
         {/* Download Note */}
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-600 mb-4">
-            Để lưu logo, nhấn giữ (long press) vào logo và chọn "Lưu hình ảnh"
+            Để lưu logo, nhấn giữ (long press) vào logo và chọn &quot;Lưu hình ảnh&quot;
           </p>
-          <p className="text-xs text-gray-500">
-            hoặc chụp màn hình (screenshot) trang này
-          </p>
+          <p className="text-xs text-gray-500">hoặc chụp màn hình (screenshot) trang này</p>
         </div>
       </div>
     </div>

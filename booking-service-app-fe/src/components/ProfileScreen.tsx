@@ -3,7 +3,19 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { motion } from 'motion/react';
-import { ArrowLeft, User, Calendar, MapPin, Clock, ChevronRight, LogOut, Edit, X, Mail, Phone } from 'lucide-react';
+import {
+  ArrowLeft,
+  User,
+  Calendar,
+  MapPin,
+  Clock,
+  ChevronRight,
+  LogOut,
+  Edit,
+  X,
+  Mail,
+  Phone,
+} from 'lucide-react';
 import { useState } from 'react';
 import { Footer } from './Footer';
 import { mockUser, bookings as initialBookings } from '../data/mockData';
@@ -24,9 +36,9 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
   const [cancelReason, setCancelReason] = useState('');
   const { showSuccess, showInfo } = useNotification();
 
-  const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
-  const servedBookings = bookings.filter(b => b.status === 'served');
-  const cancelledBookings = bookings.filter(b => b.status === 'cancelled');
+  const confirmedBookings = bookings.filter((b) => b.status === 'confirmed');
+  const servedBookings = bookings.filter((b) => b.status === 'served');
+  const cancelledBookings = bookings.filter((b) => b.status === 'cancelled');
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -56,9 +68,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
               {getStatusBadge(booking.status)}
             </div>
             <div className="space-y-1.5 text-sm text-gray-600">
-              <div className="flex items-center">
-                {booking.area}
-              </div>
+              <div className="flex items-center">{booking.area}</div>
               <div className="flex items-center">
                 {formatDateTime(booking.date, booking.time)} ({booking.duration}h)
               </div>
@@ -89,7 +99,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
 
   const handleCancelBooking = () => {
     if (!selectedBooking) return;
-    
+
     if (!cancelReason.trim()) {
       showInfo('Vui lòng nhập lý do hủy', 'Lý do hủy là bắt buộc');
       return;
@@ -98,43 +108,37 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
     // Parse booking date and time
     const bookingDateTime = new Date(`${selectedBooking.date}T${selectedBooking.time}`);
     const now = new Date();
-    
+
     // Calculate time difference in hours
     const timeDiffMs = bookingDateTime.getTime() - now.getTime();
     const timeDiffHours = timeDiffMs / (1000 * 60 * 60);
-    
+
     // Check if cancellation is within 1 hour before booking time
     const depositRefunded = timeDiffHours > 1;
-    
+
     // Update booking
-    const updatedBookings = bookings.map(b => {
+    const updatedBookings = bookings.map((b) => {
       if (b.id === selectedBooking.id) {
         return {
           ...b,
           status: 'cancelled' as const,
           cancelReason: cancelReason.trim(),
           cancelledAt: now.toISOString(),
-          depositRefunded: depositRefunded
+          depositRefunded: depositRefunded,
         };
       }
       return b;
     });
-    
+
     setBookings(updatedBookings);
     setIsCancelDialogOpen(false);
     setCancelReason('');
-    
+
     // Show notification about deposit refund
     if (depositRefunded) {
-      showSuccess(
-        'Đã hủy đặt bàn thành công',
-        'Tiền cọc sẽ được hoàn lại trong vòng 24h'
-      );
+      showSuccess('Đã hủy đặt bàn thành công', 'Tiền cọc sẽ được hoàn lại trong vòng 24h');
     } else {
-      showInfo(
-        'Đã hủy đặt bàn',
-        '⚠️ Hủy trong vòng 1h trước giờ đặt - Không hoàn cọc'
-      );
+      showInfo('Đã hủy đặt bàn', '⚠️ Hủy trong vòng 1h trước giờ đặt - Không hoàn cọc');
     }
   };
 
@@ -159,11 +163,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
       {/* Content */}
       <div className="flex-1 overflow-auto px-6 py-6">
         {/* User Info */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
           <Card className="p-6 rounded-3xl bg-linear-to-br from-orange-500 to-orange-600 text-white">
             <div className="flex items-center">
               <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mr-4">
@@ -171,12 +171,8 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
               </div>
               <div className="flex-1">
                 <p className="text-white mb-1">{mockUser.name}</p>
-                <div className="text-sm text-white/80 mb-1">
-                  {mockUser.email}
-                </div>
-                <div className="text-sm text-white/80">
-                  {mockUser.phone}
-                </div>
+                <div className="text-sm text-white/80 mb-1">{mockUser.email}</div>
+                <div className="text-sm text-white/80">{mockUser.phone}</div>
               </div>
             </div>
           </Card>
@@ -211,20 +207,20 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
         >
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="w-full grid grid-cols-3 h-12 bg-white rounded-2xl p-1">
-              <TabsTrigger 
-                value="bookings" 
+              <TabsTrigger
+                value="bookings"
                 className="rounded-xl data-[state=active]:bg-orange-500 data-[state=active]:text-white"
               >
                 Đã đặt
               </TabsTrigger>
-              <TabsTrigger 
-                value="completed" 
+              <TabsTrigger
+                value="completed"
                 className="rounded-xl data-[state=active]:bg-orange-500 data-[state=active]:text-white"
               >
                 Hoàn tất
               </TabsTrigger>
-              <TabsTrigger 
-                value="cancelled" 
+              <TabsTrigger
+                value="cancelled"
                 className="rounded-xl data-[state=active]:bg-orange-500 data-[state=active]:text-white"
               >
                 Đã hủy
@@ -233,7 +229,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
 
             <TabsContent value="bookings" className="mt-6">
               {confirmedBookings.length > 0 ? (
-                confirmedBookings.map(booking => (
+                confirmedBookings.map((booking) => (
                   <BookingCard key={booking.id} booking={booking} />
                 ))
               ) : (
@@ -254,9 +250,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
 
             <TabsContent value="completed" className="mt-6">
               {servedBookings.length > 0 ? (
-                servedBookings.map(booking => (
-                  <BookingCard key={booking.id} booking={booking} />
-                ))
+                servedBookings.map((booking) => <BookingCard key={booking.id} booking={booking} />)
               ) : (
                 <Card className="p-8 text-center rounded-2xl">
                   <p className="text-gray-600">Chưa có lịch sử hoàn tất</p>
@@ -266,7 +260,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
 
             <TabsContent value="cancelled" className="mt-6">
               {cancelledBookings.length > 0 ? (
-                cancelledBookings.map(booking => (
+                cancelledBookings.map((booking) => (
                   <BookingCard key={booking.id} booking={booking} />
                 ))
               ) : (
@@ -304,7 +298,8 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
           <DialogHeader>
             <DialogTitle>Hủy đặt bàn {selectedBooking?.tableCode}</DialogTitle>
             <DialogDescription>
-              Vui lòng nhập lý do hủy đặt bàn. Nếu hủy trong vòng 1 giờ trước giờ đặt, tiền cọc sẽ không được hoàn lại.
+              Vui lòng nhập lý do hủy đặt bàn. Nếu hủy trong vòng 1 giờ trước giờ đặt, tiền cọc sẽ
+              không được hoàn lại.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
@@ -323,15 +318,16 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
               />
               <p className="text-xs text-gray-500">{cancelReason.length}/500 ký tự</p>
             </div>
-            
+
             {selectedBooking && (
               <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4">
                 <p className="text-sm text-orange-800">
-                  <strong>Lưu ý:</strong> Thời gian đặt bàn: {selectedBooking.time} {selectedBooking.date}
+                  <strong>Lưu ý:</strong> Thời gian đặt bàn: {selectedBooking.time}{' '}
+                  {selectedBooking.date}
                 </p>
                 <p className="text-sm text-orange-700 mt-2">
-                  • Hủy trước 1h: Hoàn cọc 100%<br />
-                  • Hủy trong vòng 1h: Không hoàn cọc
+                  • Hủy trước 1h: Hoàn cọc 100%
+                  <br />• Hủy trong vòng 1h: Không hoàn cọc
                 </p>
               </div>
             )}

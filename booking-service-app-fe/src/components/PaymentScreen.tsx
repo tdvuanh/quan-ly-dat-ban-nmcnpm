@@ -6,7 +6,19 @@ import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { motion } from 'motion/react';
-import { ArrowLeft, CreditCard, Wallet, QrCode, CheckCircle2, User, Phone, Calendar, Users, MapPin, Clock } from 'lucide-react';
+import {
+  ArrowLeft,
+  CreditCard,
+  Wallet,
+  QrCode,
+  CheckCircle2,
+  User,
+  Phone,
+  Calendar,
+  Users,
+  MapPin,
+  Clock,
+} from 'lucide-react';
 import { useNotification } from '../context/NotificationContext';
 import { Footer } from './Footer';
 
@@ -30,13 +42,13 @@ export function PaymentScreen({ onNavigate, bookingData }: PaymentScreenProps) {
       setIsProcessing(false);
       setIsSuccess(true);
       showSuccess('Đặt bàn thành công!', `Bàn ${bookingData?.tableCode} đã được đặt`);
-      
+
       // Navigate to success screen after 1.5s
       setTimeout(() => {
         onNavigate('paymentSuccess', {
           ...bookingData,
           amount: depositAmount,
-          paymentMethod
+          paymentMethod,
         });
       }, 1500);
     }, 2000);
@@ -88,11 +100,9 @@ export function PaymentScreen({ onNavigate, bookingData }: PaymentScreenProps) {
           <Card className="p-6 rounded-3xl shadow-lg bg-linear-to-br from-orange-50 to-white border-orange-100">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-gray-900">Thông tin đặt bàn</h3>
-              <Badge className="bg-orange-100 text-orange-700 border-orange-200">
-                Đặt cọc
-              </Badge>
+              <Badge className="bg-orange-100 text-orange-700 border-orange-200">Đặt cọc</Badge>
             </div>
-            
+
             {/* Grid Layout */}
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="p-3 bg-white rounded-2xl">
@@ -102,7 +112,7 @@ export function PaymentScreen({ onNavigate, bookingData }: PaymentScreenProps) {
                 </div>
                 <p className="text-gray-900">{bookingData?.tableCode}</p>
               </div>
-              
+
               <div className="p-3 bg-white rounded-2xl">
                 <div className="flex items-center gap-2 mb-1">
                   <MapPin className="w-4 h-4 text-orange-500" />
@@ -110,7 +120,7 @@ export function PaymentScreen({ onNavigate, bookingData }: PaymentScreenProps) {
                 </div>
                 <p className="text-gray-900">{bookingData?.area}</p>
               </div>
-              
+
               <div className="p-3 bg-white rounded-2xl">
                 <div className="flex items-center gap-2 mb-1">
                   <Calendar className="w-4 h-4 text-orange-500" />
@@ -118,7 +128,7 @@ export function PaymentScreen({ onNavigate, bookingData }: PaymentScreenProps) {
                 </div>
                 <p className="text-gray-900">{bookingData?.date}</p>
               </div>
-              
+
               <div className="p-3 bg-white rounded-2xl">
                 <div className="flex items-center gap-2 mb-1">
                   <Clock className="w-4 h-4 text-orange-500" />
@@ -126,7 +136,7 @@ export function PaymentScreen({ onNavigate, bookingData }: PaymentScreenProps) {
                 </div>
                 <p className="text-gray-900">{bookingData?.time}</p>
               </div>
-              
+
               <div className="p-3 bg-white rounded-2xl">
                 <div className="flex items-center gap-2 mb-1">
                   <Users className="w-4 h-4 text-orange-500" />
@@ -134,7 +144,7 @@ export function PaymentScreen({ onNavigate, bookingData }: PaymentScreenProps) {
                 </div>
                 <p className="text-gray-900">{bookingData?.guests} người</p>
               </div>
-              
+
               <div className="p-3 bg-white rounded-2xl">
                 <div className="flex items-center gap-2 mb-1">
                   <Users className="w-4 h-4 text-orange-500" />
@@ -143,13 +153,11 @@ export function PaymentScreen({ onNavigate, bookingData }: PaymentScreenProps) {
                 <p className="text-gray-900">{bookingData?.duration} giờ</p>
               </div>
             </div>
-            
+
             <div className="pt-4 border-t border-orange-200">
               <div className="flex items-center justify-between">
                 <span className="text-gray-900">Tiền đặt cọc</span>
-                <span className="text-orange-600">
-                  {depositAmount.toLocaleString('vi-VN')}đ
-                </span>
+                <span className="text-orange-600">{depositAmount.toLocaleString('vi-VN')}đ</span>
               </div>
             </div>
           </Card>
@@ -196,8 +204,18 @@ export function PaymentScreen({ onNavigate, bookingData }: PaymentScreenProps) {
           <Card className="p-4 rounded-2xl bg-green-50 border-green-100">
             <div className="flex items-start">
               <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mr-3 flex-shrink-0">
-                <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                <svg
+                  className="w-4 h-4 text-green-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  />
                 </svg>
               </div>
               <div>

@@ -2,7 +2,16 @@ import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { motion } from 'motion/react';
-import { ArrowLeft, CheckCircle, Gift, Clock, Info, Bell, Trash2, UtensilsCrossed } from 'lucide-react';
+import {
+  ArrowLeft,
+  CheckCircle,
+  Gift,
+  Clock,
+  Info,
+  Bell,
+  Trash2,
+  UtensilsCrossed,
+} from 'lucide-react';
 import { notifications as mockNotifications } from '../data/mockData';
 
 interface NotificationScreenProps {
@@ -59,8 +68,8 @@ export function NotificationScreen({ onNavigate }: NotificationScreenProps) {
     }
   };
 
-  const newNotifications = mockNotifications.filter(n => !n.read);
-  const oldNotifications = mockNotifications.filter(n => n.read);
+  const newNotifications = mockNotifications.filter((n) => !n.read);
+  const oldNotifications = mockNotifications.filter((n) => n.read);
 
   return (
     <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-orange-50 flex flex-col">
@@ -86,9 +95,7 @@ export function NotificationScreen({ onNavigate }: NotificationScreenProps) {
               <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center">
                 <Bell className="w-4 h-4 text-white" />
               </div>
-              <span className="text-sm text-gray-700">
-                {newNotifications.length} thông báo mới
-              </span>
+              <span className="text-sm text-gray-700">{newNotifications.length} thông báo mới</span>
             </div>
             <Button
               size="sm"
@@ -121,18 +128,24 @@ export function NotificationScreen({ onNavigate }: NotificationScreenProps) {
                 >
                   <Card className="p-4 rounded-2xl hover:shadow-md transition-shadow cursor-pointer border-2 border-orange-100">
                     <div className="flex items-start gap-3">
-                      <div className={`w-12 h-12 rounded-2xl ${getNotificationBgColor(notification.type)} flex items-center justify-center flex-shrink-0`}>
+                      <div
+                        className={`w-12 h-12 rounded-2xl ${getNotificationBgColor(notification.type)} flex items-center justify-center flex-shrink-0`}
+                      >
                         {getNotificationIcon(notification.type)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <p className="text-gray-900">{notification.title}</p>
-                          <Badge className="bg-orange-500 text-white text-xs px-2 py-0.5">Mới</Badge>
+                          <Badge className="bg-orange-500 text-white text-xs px-2 py-0.5">
+                            Mới
+                          </Badge>
                         </div>
                         <p className="text-sm text-gray-600 mb-2 line-clamp-2">
                           {notification.message}
                         </p>
-                        <p className="text-xs text-gray-400">{formatTime(notification.timestamp)}</p>
+                        <p className="text-xs text-gray-400">
+                          {formatTime(notification.timestamp)}
+                        </p>
                       </div>
                     </div>
                   </Card>
@@ -160,7 +173,9 @@ export function NotificationScreen({ onNavigate }: NotificationScreenProps) {
                 >
                   <Card className="p-4 rounded-2xl hover:shadow-md transition-shadow cursor-pointer">
                     <div className="flex items-start gap-3">
-                      <div className={`w-12 h-12 rounded-2xl ${getNotificationBgColor(notification.type)} flex items-center justify-center flex-shrink-0`}>
+                      <div
+                        className={`w-12 h-12 rounded-2xl ${getNotificationBgColor(notification.type)} flex items-center justify-center flex-shrink-0`}
+                      >
                         {getNotificationIcon(notification.type)}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -168,7 +183,9 @@ export function NotificationScreen({ onNavigate }: NotificationScreenProps) {
                         <p className="text-sm text-gray-600 mb-2 line-clamp-2">
                           {notification.message}
                         </p>
-                        <p className="text-xs text-gray-400">{formatTime(notification.timestamp)}</p>
+                        <p className="text-xs text-gray-400">
+                          {formatTime(notification.timestamp)}
+                        </p>
                       </div>
                     </div>
                   </Card>
@@ -190,7 +207,9 @@ export function NotificationScreen({ onNavigate }: NotificationScreenProps) {
             </div>
             <p className="text-gray-900 mb-2">Chưa có thông báo nào</p>
             <p className="text-sm text-gray-600 text-center mb-6">
-              Các thông báo về đặt bàn và khuyến mãi<br />sẽ hiển thị tại đây
+              Các thông báo về đặt bàn và khuyến mãi
+              <br />
+              sẽ hiển thị tại đây
             </p>
             <Button
               onClick={() => onNavigate('home')}

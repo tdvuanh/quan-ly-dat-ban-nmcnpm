@@ -3,21 +3,48 @@ import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { motion } from 'motion/react';
-import { 
-  Calendar, Users, MapPin, Clock, Search, 
-  Menu, LogOut, Home, Settings, Bell, ChevronRight, User, Plus, Trash2, Phone, MessageSquare
+import {
+  Calendar,
+  Users,
+  MapPin,
+  Clock,
+  Search,
+  Menu,
+  LogOut,
+  Home,
+  Settings,
+  Bell,
+  ChevronRight,
+  User,
+  Plus,
+  Trash2,
+  Phone,
+  MessageSquare,
 } from 'lucide-react';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from './ui/dialog';
 import { Label } from './ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Calendar as CalendarComponent } from './ui/calendar';
 import { Textarea } from './ui/textarea';
-import { 
-  AlertDialog, AlertDialogAction, AlertDialogCancel, 
-  AlertDialogContent, AlertDialogDescription, AlertDialogFooter, 
-  AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
 } from './ui/alert-dialog';
 import { tables as initialTables, Table, areas, generateTimeSlots } from '../data/mockData';
 import { Footer } from './Footer';
@@ -54,7 +81,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const { showSuccess, showInfo } = useNotification();
-  
+
   // Booking Dialog State
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
   const [selectedBookingTable, setSelectedBookingTable] = useState<Table | null>(null);
@@ -66,34 +93,58 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     time: '',
     duration: 1,
     guests: 2,
-    notes: ''
+    notes: '',
   });
 
   // Available Hours Dialog State
   const [isAvailableHoursDialogOpen, setIsAvailableHoursDialogOpen] = useState(false);
   const [selectedTableForHours, setSelectedTableForHours] = useState<Table | null>(null);
-  
+
   const [newTable, setNewTable] = useState({
     code: '',
     capacity: 2,
     area: 'floor1',
-    status: 'available' as Table['status']
+    status: 'available' as Table['status'],
   });
 
   const timeSlots = generateOperatingHours();
 
   // Mock notifications
   const notifications = [
-    { id: 1, type: 'new', message: 'Bàn B03 vừa được đặt lúc 14:30', time: '5 phút trước', unread: true },
-    { id: 2, type: 'deposit', message: 'Bàn V01 đã được cọc 500.000đ', time: '10 phút trước', unread: true },
-    { id: 3, type: 'cancel', message: 'Đặt bàn B05 đã bị hủy', time: '15 phút trước', unread: true },
-    { id: 4, type: 'new', message: 'Bàn T02 vừa được đặt lúc 19:00', time: '30 phút trước', unread: false },
+    {
+      id: 1,
+      type: 'new',
+      message: 'Bàn B03 vừa được đặt lúc 14:30',
+      time: '5 phút trước',
+      unread: true,
+    },
+    {
+      id: 2,
+      type: 'deposit',
+      message: 'Bàn V01 đã được cọc 500.000đ',
+      time: '10 phút trước',
+      unread: true,
+    },
+    {
+      id: 3,
+      type: 'cancel',
+      message: 'Đặt bàn B05 đã bị hủy',
+      time: '15 phút trước',
+      unread: true,
+    },
+    {
+      id: 4,
+      type: 'new',
+      message: 'Bàn T02 vừa được đặt lúc 19:00',
+      time: '30 phút trước',
+      unread: false,
+    },
   ];
 
-  const availableTables = tables.filter(t => t.status === 'available').length;
-  const servingTables = tables.filter(t => t.status === 'serving').length;
-  const bookedTables = tables.filter(t => t.status === 'booked').length;
-  const cleaningTables = tables.filter(t => t.status === 'cleaning').length;
+  const availableTables = tables.filter((t) => t.status === 'available').length;
+  const servingTables = tables.filter((t) => t.status === 'serving').length;
+  const bookedTables = tables.filter((t) => t.status === 'booked').length;
+  const cleaningTables = tables.filter((t) => t.status === 'cleaning').length;
 
   // Get today's date in Vietnamese format
   const getTodayDate = () => {
@@ -121,20 +172,23 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'available': return 'Trống';
-      case 'booked': return 'Đã đặt';
-      case 'serving': return 'Phục vụ';
-      case 'cleaning': return 'Đang dọn';
-      default: return status;
+      case 'available':
+        return 'Trống';
+      case 'booked':
+        return 'Đã đặt';
+      case 'serving':
+        return 'Phục vụ';
+      case 'cleaning':
+        return 'Đang dọn';
+      default:
+        return status;
     }
   };
 
   const handleChangeStatus = (tableId: string, newStatus: Table['status']) => {
-    const table = tables.find(t => t.id === tableId);
-    setTables(tables.map(t => 
-      t.id === tableId ? { ...t, status: newStatus } : t
-    ));
-    
+    const table = tables.find((t) => t.id === tableId);
+    setTables(tables.map((t) => (t.id === tableId ? { ...t, status: newStatus } : t)));
+
     showInfo(
       'Cập nhật trạng thái bàn',
       `Bàn ${table?.code} đã được chuyển sang trạng thái ${getStatusText(newStatus)}`
@@ -143,7 +197,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
 
   const handleAddTable = () => {
     if (!newTable.code.trim()) return;
-    
+
     const newId = `t${Date.now()}`;
     const table: Table = {
       id: newId,
@@ -152,9 +206,9 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       area: newTable.area,
       status: newTable.status,
       x: 100,
-      y: 100
+      y: 100,
     };
-    
+
     setTables([...tables, table]);
     showSuccess('Thêm bàn thành công', `Bàn ${newTable.code} đã được thêm vào hệ thống`);
     setNewTable({ code: '', capacity: 2, area: 'floor1', status: 'available' });
@@ -162,14 +216,14 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   };
 
   const handleDeleteTable = (tableId: string) => {
-    const table = tables.find(t => t.id === tableId);
-    setTables(tables.filter(t => t.id !== tableId));
+    const table = tables.find((t) => t.id === tableId);
+    setTables(tables.filter((t) => t.id !== tableId));
     showSuccess('Xóa bàn thành công', `Bàn ${table?.code} đã được xóa khỏi hệ thống`);
   };
 
   const handleToggleCleaningAvailable = (tableId: string, currentStatus: Table['status']) => {
     let newStatus: Table['status'];
-    
+
     if (currentStatus === 'cleaning') {
       newStatus = 'available';
     } else if (currentStatus === 'available') {
@@ -178,7 +232,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       // If current status is serving or booked, set to cleaning
       newStatus = 'cleaning';
     }
-    
+
     handleChangeStatus(tableId, newStatus);
   };
 
@@ -192,7 +246,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       time: '',
       duration: 1,
       guests: Math.min(2, table.capacity), // Mặc định 2 người hoặc ít hơn nếu bàn nhỏ
-      notes: ''
+      notes: '',
     });
     setIsBookingDialogOpen(true);
   };
@@ -206,16 +260,18 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     // Validate số lượng khách không vượt quá sức chứa
     if (selectedBookingTable && bookingData.guests > selectedBookingTable.capacity) {
       showInfo(
-        'Vượt quá sức chứa', 
+        'Vượt quá sức chứa',
         `Bàn ${selectedBookingTable.code} chỉ chứa tối đa ${selectedBookingTable.capacity} người`
       );
       return;
     }
 
     // Update table status to booked
-    setTables(tables.map(t => 
-      t.id === selectedBookingTable?.id ? { ...t, status: 'booked' as Table['status'] } : t
-    ));
+    setTables(
+      tables.map((t) =>
+        t.id === selectedBookingTable?.id ? { ...t, status: 'booked' as Table['status'] } : t
+      )
+    );
 
     showSuccess(
       'Đặt bàn thành công',
@@ -227,7 +283,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   };
 
   const getAreaName = (areaId: string) => {
-    return areas.find(a => a.id === areaId)?.name || areaId;
+    return areas.find((a) => a.id === areaId)?.name || areaId;
   };
 
   return (
@@ -245,16 +301,16 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
             </div>
           </div>
           <div className="flex gap-2">
-            <button 
+            <button
               onClick={() => setShowNotifications(!showNotifications)}
               className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors relative"
             >
               <Bell className="w-5 h-5 text-white" />
-              {notifications.filter(n => n.unread).length > 0 && (
+              {notifications.filter((n) => n.unread).length > 0 && (
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               )}
             </button>
-            <button 
+            <button
               onClick={() => onNavigate('login')}
               className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors"
             >
@@ -298,9 +354,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
             <DialogContent className="rounded-3xl" aria-describedby="add-table-description">
               <DialogHeader>
                 <DialogTitle>Thêm bàn mới</DialogTitle>
-                <DialogDescription>
-                  Điền thông tin để thêm bàn mới vào hệ thống
-                </DialogDescription>
+                <DialogDescription>Điền thông tin để thêm bàn mới vào hệ thống</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
@@ -313,7 +367,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                     className="h-12 rounded-2xl"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="capacity">Sức chứa</Label>
                   <Select
@@ -344,7 +398,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {areas.map(area => (
+                      {areas.map((area) => (
                         <SelectItem key={area.id} value={area.id}>
                           {area.icon} {area.name}
                         </SelectItem>
@@ -404,7 +458,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                       {getStatusText(table.status)}
                     </Badge>
                   </div>
-                  
+
                   {/* Footer: Status Change Buttons */}
                   <div className="flex flex-col gap-2">
                     {/* Đặt Bàn Button - Highlighted */}
@@ -415,7 +469,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                     >
                       Đặt Bàn
                     </Button>
-                    
+
                     {/* Status Buttons Row: Phục vụ, Xem giờ trống, Đang dọn */}
                     <div className="grid grid-cols-3 gap-2">
                       <Button
@@ -440,17 +494,28 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                       </Button>
                       <Button
                         size="sm"
-                        variant={table.status === 'cleaning' || table.status === 'available' ? 'default' : 'outline'}
+                        variant={
+                          table.status === 'cleaning' || table.status === 'available'
+                            ? 'default'
+                            : 'outline'
+                        }
                         onClick={() => handleToggleCleaningAvailable(table.id, table.status)}
                         className={`text-xs rounded-xl h-8 ${
-                          table.status === 'cleaning' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 
-                          table.status === 'available' ? 'bg-green-100 text-green-700 border-green-200' : ''
+                          table.status === 'cleaning'
+                            ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                            : table.status === 'available'
+                              ? 'bg-green-100 text-green-700 border-green-200'
+                              : ''
                         }`}
                       >
-                        {table.status === 'cleaning' ? 'Đặt trống' : table.status === 'available' ? 'Đang dọn' : 'Đang dọn'}
+                        {table.status === 'cleaning'
+                          ? 'Đặt trống'
+                          : table.status === 'available'
+                            ? 'Đang dọn'
+                            : 'Đang dọn'}
                       </Button>
                     </div>
-                    
+
                     {/* Delete Button Row */}
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -499,7 +564,10 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
         >
           <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-3 flex items-center justify-between">
             <h3 className="text-white">Thông báo</h3>
-            <button onClick={() => setShowNotifications(false)} className="text-white hover:bg-white/20 rounded-full p-1">
+            <button
+              onClick={() => setShowNotifications(false)}
+              className="text-white hover:bg-white/20 rounded-full p-1"
+            >
               ✕
             </button>
           </div>
@@ -512,11 +580,15 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
-                    notif.type === 'new' ? 'bg-green-500' :
-                    notif.type === 'deposit' ? 'bg-blue-500' :
-                    'bg-red-500'
-                  }`} />
+                  <div
+                    className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                      notif.type === 'new'
+                        ? 'bg-green-500'
+                        : notif.type === 'deposit'
+                          ? 'bg-blue-500'
+                          : 'bg-red-500'
+                    }`}
+                  />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-900 mb-1">{notif.message}</p>
                     <p className="text-xs text-gray-500">{notif.time}</p>
@@ -526,9 +598,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
             ))}
           </div>
           <div className="px-4 py-3 bg-gray-50 text-center">
-            <button className="text-sm text-orange-600 hover:text-orange-700">
-              Xem tất cả
-            </button>
+            <button className="text-sm text-orange-600 hover:text-orange-700">Xem tất cả</button>
           </div>
         </motion.div>
       )}
@@ -538,11 +608,9 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
         <DialogContent className="rounded-3xl max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Đặt bàn cho {selectedBookingTable?.code}</DialogTitle>
-            <DialogDescription>
-              Điền thông tin khách hàng và thời gian đặt bàn
-            </DialogDescription>
+            <DialogDescription>Điền thông tin khách hàng và thời gian đặt bàn</DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-6 py-4">
             {/* Customer Information */}
             <div>
@@ -557,7 +625,9 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                   <Input
                     placeholder="Nhập tên"
                     value={bookingData.customerName}
-                    onChange={(e) => setBookingData({ ...bookingData, customerName: e.target.value })}
+                    onChange={(e) =>
+                      setBookingData({ ...bookingData, customerName: e.target.value })
+                    }
                     className="flex-1 h-12 rounded-2xl border-gray-200"
                   />
                 </div>
@@ -575,7 +645,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                     onChange={(e) => {
                       const value = e.target.value;
                       const newBookingData = { ...bookingData, phoneNumber: value };
-                      
+
                       // Kiểm tra liên tục khi nhập
                       if (!value) {
                         newBookingData.phoneValidationError = '';
@@ -588,7 +658,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                       } else {
                         newBookingData.phoneValidationError = '';
                       }
-                      
+
                       setBookingData(newBookingData);
                     }}
                     className={`h-12 rounded-2xl border-gray-200 ${bookingData.phoneValidationError ? 'border-red-500' : ''}`}
@@ -621,7 +691,10 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                   </Label>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full h-12 rounded-2xl border-gray-200 justify-start">
+                      <Button
+                        variant="outline"
+                        className="w-full h-12 rounded-2xl border-gray-200 justify-start"
+                      >
                         {format(bookingData.date, 'dd/MM/yyyy', { locale: vi })}
                       </Button>
                     </PopoverTrigger>
@@ -643,7 +716,10 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                     <Clock className="w-4 h-4 text-orange-500" />
                     Giờ đặt
                   </Label>
-                  <Select value={bookingData.time} onValueChange={(value) => setBookingData({ ...bookingData, time: value })}>
+                  <Select
+                    value={bookingData.time}
+                    onValueChange={(value) => setBookingData({ ...bookingData, time: value })}
+                  >
                     <SelectTrigger className="h-12 rounded-2xl border-gray-200">
                       <SelectValue placeholder="Chọn giờ" />
                     </SelectTrigger>
@@ -661,7 +737,12 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Thời gian (giờ)</Label>
-                    <Select value={String(bookingData.duration)} onValueChange={(value) => setBookingData({ ...bookingData, duration: Number(value) })}>
+                    <Select
+                      value={String(bookingData.duration)}
+                      onValueChange={(value) =>
+                        setBookingData({ ...bookingData, duration: Number(value) })
+                      }
+                    >
                       <SelectTrigger className="h-12 rounded-2xl border-gray-200">
                         <SelectValue />
                       </SelectTrigger>
@@ -679,12 +760,20 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                       <Users className="w-4 h-4 text-orange-500" />
                       Số người
                     </Label>
-                    <Select value={String(bookingData.guests)} onValueChange={(value) => setBookingData({ ...bookingData, guests: Number(value) })}>
+                    <Select
+                      value={String(bookingData.guests)}
+                      onValueChange={(value) =>
+                        setBookingData({ ...bookingData, guests: Number(value) })
+                      }
+                    >
                       <SelectTrigger className="h-12 rounded-2xl border-gray-200">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {Array.from({ length: selectedBookingTable?.capacity || 2 }, (_, i) => i + 1).map((num) => (
+                        {Array.from(
+                          { length: selectedBookingTable?.capacity || 2 },
+                          (_, i) => i + 1
+                        ).map((num) => (
                           <SelectItem key={num} value={String(num)}>
                             {num} người
                           </SelectItem>
@@ -734,9 +823,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
         <DialogContent className="rounded-3xl max-w-md">
           <DialogHeader>
             <DialogTitle>Giờ trống - Bàn {selectedTableForHours?.code}</DialogTitle>
-            <DialogDescription>
-              Thời gian hoạt động: 10:00 - 22:00
-            </DialogDescription>
+            <DialogDescription>Thời gian hoạt động: 10:00 - 22:00</DialogDescription>
           </DialogHeader>
 
           <div className="py-4">
@@ -753,16 +840,20 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                     whileHover={!isBooked ? { scale: 1.05 } : {}}
                     onClick={() => {
                       if (!isBooked) {
-                        showSuccess('Đã chọn giờ', `Giờ ${hour} đã được chọn cho bàn ${selectedTableForHours?.code}`);
+                        showSuccess(
+                          'Đã chọn giờ',
+                          `Giờ ${hour} đã được chọn cho bàn ${selectedTableForHours?.code}`
+                        );
                         setIsAvailableHoursDialogOpen(false);
                       }
                     }}
                     disabled={isBooked}
                     className={`
                       px-3 py-2 rounded-lg text-sm transition-all
-                      ${isBooked 
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50' 
-                        : 'bg-gradient-to-r from-green-50 to-green-100 text-green-700 hover:from-green-100 hover:to-green-200 hover:shadow-md cursor-pointer border-2 border-green-200'
+                      ${
+                        isBooked
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
+                          : 'bg-gradient-to-r from-green-50 to-green-100 text-green-700 hover:from-green-100 hover:to-green-200 hover:shadow-md cursor-pointer border-2 border-green-200'
                       }
                     `}
                   >

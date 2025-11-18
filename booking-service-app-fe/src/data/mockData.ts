@@ -51,7 +51,7 @@ export const areas = [
   { id: 'floor1', name: 'Tầng 1', icon: '🏠' },
   { id: 'floor2', name: 'Tầng 2', icon: '🏢' },
   { id: 'outdoor', name: 'Ngoài trời', icon: '🌳' },
-  { id: 'vip', name: 'Phòng VIP', icon: '👑' }
+  { id: 'vip', name: 'Phòng VIP', icon: '👑' },
 ];
 
 // Restaurant opening hours: 9:00 AM - 9:00 PM (21:00)
@@ -76,18 +76,18 @@ export const tables: Table[] = [
   { id: 't4', code: 'B04', capacity: 4, area: 'floor1', status: 'booked', x: 50, y: 150 },
   { id: 't5', code: 'B05', capacity: 6, area: 'floor1', status: 'cleaning', x: 150, y: 150 },
   { id: 't6', code: 'B06', capacity: 8, area: 'floor1', status: 'available', x: 250, y: 150 },
-  
+
   // Tầng 2
   { id: 't7', code: 'B07', capacity: 2, area: 'floor2', status: 'available', x: 50, y: 50 },
   { id: 't8', code: 'B08', capacity: 4, area: 'floor2', status: 'available', x: 150, y: 50 },
   { id: 't9', code: 'B09', capacity: 4, area: 'floor2', status: 'serving', x: 250, y: 50 },
   { id: 't10', code: 'B10', capacity: 6, area: 'floor2', status: 'available', x: 150, y: 150 },
-  
+
   // Ngoài trời
   { id: 't11', code: 'B11', capacity: 4, area: 'outdoor', status: 'available', x: 50, y: 50 },
   { id: 't12', code: 'B12', capacity: 4, area: 'outdoor', status: 'available', x: 150, y: 50 },
   { id: 't13', code: 'B13', capacity: 6, area: 'outdoor', status: 'booked', x: 250, y: 50 },
-  
+
   // VIP
   { id: 't14', code: 'V01', capacity: 10, area: 'vip', status: 'available', x: 100, y: 100 },
   { id: 't15', code: 'V02', capacity: 12, area: 'vip', status: 'available', x: 250, y: 100 },
@@ -107,7 +107,7 @@ export const bookings: Booking[] = [
     area: 'Tầng 1',
     note: 'Bàn gần cửa sổ',
     status: 'confirmed',
-    qrCode: 'QR-B02-20251115'
+    qrCode: 'QR-B02-20251115',
   },
   {
     id: 'b2',
@@ -121,7 +121,7 @@ export const bookings: Booking[] = [
     guests: 4,
     area: 'Tầng 1',
     status: 'confirmed',
-    qrCode: 'QR-B04-20251115'
+    qrCode: 'QR-B04-20251115',
   },
   {
     id: 'b3',
@@ -135,7 +135,7 @@ export const bookings: Booking[] = [
     guests: 4,
     area: 'Tầng 2',
     status: 'served',
-    qrCode: 'QR-B09-20251114'
+    qrCode: 'QR-B09-20251114',
   },
   {
     id: 'b4',
@@ -150,8 +150,8 @@ export const bookings: Booking[] = [
     area: 'Ngoài trời',
     note: 'Sinh nhật',
     status: 'confirmed',
-    qrCode: 'QR-B13-20251115'
-  }
+    qrCode: 'QR-B13-20251115',
+  },
 ];
 
 export const notifications: Notification[] = [
@@ -162,7 +162,7 @@ export const notifications: Notification[] = [
     message: 'Giảm 20% cho hóa đơn từ 500k. Áp dụng từ thứ 6 đến Chủ nhật.',
     timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     read: false,
-    icon: '🎁'
+    icon: '🎁',
   },
   {
     id: 'n2',
@@ -171,7 +171,7 @@ export const notifications: Notification[] = [
     message: 'Thưởng thức món Phở Bò Úc cao cấp với thịt bò nhập khẩu. Giá chỉ 120k.',
     timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
     read: false,
-    icon: '🍲'
+    icon: '🍲',
   },
   {
     id: 'n3',
@@ -180,7 +180,7 @@ export const notifications: Notification[] = [
     message: 'Tất cả đồ uống giảm 30%. Đừng bỏ lỡ!',
     timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     read: true,
-    icon: '🥤'
+    icon: '🥤',
   },
   {
     id: 'n4',
@@ -189,8 +189,8 @@ export const notifications: Notification[] = [
     message: 'Tiramisu Ý và Panna Cotta đã có mặt trong thực đơn tráng miệng.',
     timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     read: true,
-    icon: '🧁'
-  }
+    icon: '🧁',
+  },
 ];
 
 export const mockUser: User = {
@@ -198,7 +198,7 @@ export const mockUser: User = {
   name: 'Khách hàng Demo',
   email: 'demo@example.com',
   phone: '0912345678',
-  role: 'customer'
+  role: 'customer',
 };
 
 export const mockAdmin: User = {
@@ -206,5 +206,5 @@ export const mockAdmin: User = {
   name: 'Admin Demo',
   email: 'admin@restaurant.com',
   phone: '0909999999',
-  role: 'admin'
+  role: 'admin',
 };
