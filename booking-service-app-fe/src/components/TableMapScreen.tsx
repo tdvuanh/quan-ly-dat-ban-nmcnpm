@@ -5,8 +5,12 @@ import { motion } from 'motion/react';
 import { ArrowLeft, List } from 'lucide-react';
 import { tables, areas } from '../data/mockData';
 
+interface Table {
+  tableId: string;
+}
+
 interface TableMapScreenProps {
-  onNavigate: (screen: string) => void;
+  onNavigate: (screen: string, table?: Table) => void;
   initialArea?: string;
 }
 
@@ -71,7 +75,7 @@ export function TableMapScreen({ onNavigate, initialArea }: TableMapScreenProps)
             <button
               key={area.id}
               onClick={() => setSelectedArea(area.id)}
-              className={`flex-shrink-0 px-4 py-2 rounded-2xl transition-all flex items-center gap-2 ${
+              className={`shrink-0 px-4 py-2 rounded-2xl transition-all flex items-center gap-2 ${
                 selectedArea === area.id
                   ? 'bg-orange-500 text-white shadow-md'
                   : 'bg-white text-gray-600 border border-gray-200'
@@ -171,7 +175,7 @@ export function TableMapScreen({ onNavigate, initialArea }: TableMapScreenProps)
       <div className="bg-white border-t border-gray-100 px-6 py-4">
         <Button
           onClick={() => onNavigate('booking')}
-          className="w-full h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl"
+          className="w-full h-12 bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl"
         >
           Đặt bàn ngay
         </Button>

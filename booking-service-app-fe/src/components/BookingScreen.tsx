@@ -385,7 +385,7 @@ export function BookingScreen({ onNavigate, initialData }: BookingScreenProps) {
           <Button
             onClick={handleConfirm}
             disabled={!selectedTableId || !date || !selectedTime}
-            className="w-full h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full h-12 bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Xác nhận đặt bàn
           </Button>

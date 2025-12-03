@@ -6,15 +6,8 @@ import { motion } from 'motion/react';
 import {
   Calendar,
   Users,
-  MapPin,
   Clock,
-  Search,
-  Menu,
-  LogOut,
-  Home,
-  Settings,
   Bell,
-  ChevronRight,
   User,
   Plus,
   Trash2,
@@ -46,7 +39,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from './ui/alert-dialog';
-import { tables as initialTables, Table, areas, generateTimeSlots } from '../data/mockData';
+import { tables as initialTables, type Table, areas } from '../data/mockData';
 import { Footer } from './Footer';
 import { useNotification } from '../context/NotificationContext';
 import { format } from 'date-fns';
@@ -144,16 +137,16 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const availableTables = tables.filter((t) => t.status === 'available').length;
   const servingTables = tables.filter((t) => t.status === 'serving').length;
   const bookedTables = tables.filter((t) => t.status === 'booked').length;
-  const cleaningTables = tables.filter((t) => t.status === 'cleaning').length;
+  // const cleaningTables = tables.filter((t) => t.status === 'cleaning').length;
 
   // Get today's date in Vietnamese format
-  const getTodayDate = () => {
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
+  // const getTodayDate = () => {
+  //   const today = new Date();
+  //   const day = today.getDate();
+  //   const month = today.getMonth() + 1;
+  //   const year = today.getFullYear();
+  //   return `${day}/${month}/${year}`;
+  // };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -346,7 +339,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
         <div className="mb-6">
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="max-w-xs w-full h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl shadow-lg shadow-orange-200">
+              <Button className="max-w-xs w-full h-12 bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl shadow-lg shadow-orange-200">
                 <Plus className="w-5 h-5 mr-2" />
                 Thêm bàn
               </Button>
@@ -418,7 +411,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                 <Button
                   onClick={handleAddTable}
                   disabled={!newTable.code.trim()}
-                  className="flex-1 h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl"
+                  className="flex-1 h-12 bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl"
                 >
                   Thêm bàn
                 </Button>
@@ -464,7 +457,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                     {/* Đặt Bàn Button - Highlighted */}
                     <Button
                       size="sm"
-                      className="w-full text-sm uppercase rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-md tracking-wide h-9"
+                      className="w-full text-sm uppercase rounded-xl bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-md tracking-wide h-9"
                       onClick={() => handleOpenBooking(table)}
                     >
                       Đặt Bàn
@@ -562,7 +555,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
           exit={{ opacity: 0, y: -20 }}
           className="fixed top-20 right-6 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50"
         >
-          <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-3 flex items-center justify-between">
+          <div className="bg-linear-to-r from-orange-500 to-orange-600 text-white px-4 py-3 flex items-center justify-between">
             <h3 className="text-white">Thông báo</h3>
             <button
               onClick={() => setShowNotifications(false)}
@@ -581,7 +574,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
               >
                 <div className="flex items-start gap-3">
                   <div
-                    className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                    className={`w-2 h-2 rounded-full mt-2 shrink-0 ${
                       notif.type === 'new'
                         ? 'bg-green-500'
                         : notif.type === 'deposit'
@@ -810,7 +803,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
             </Button>
             <Button
               onClick={handleConfirmBooking}
-              className="flex-1 h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl"
+              className="flex-1 h-12 bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl"
             >
               Xác nhận đặt bàn
             </Button>
@@ -853,7 +846,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                       ${
                         isBooked
                           ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
-                          : 'bg-gradient-to-r from-green-50 to-green-100 text-green-700 hover:from-green-100 hover:to-green-200 hover:shadow-md cursor-pointer border-2 border-green-200'
+                          : 'bg-linear-to-r from-green-50 to-green-100 text-green-700 hover:from-green-100 hover:to-green-200 hover:shadow-md cursor-pointer border-2 border-green-200'
                       }
                     `}
                   >
@@ -866,7 +859,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
             {/* Legend */}
             <div className="mt-6 flex items-center justify-center gap-6">
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-200"></div>
+                <div className="w-4 h-4 rounded bg-linear-to-r from-green-50 to-green-100 border-2 border-green-200"></div>
                 <span className="text-xs text-gray-600">Giờ trống</span>
               </div>
               <div className="flex items-center gap-2">

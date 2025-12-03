@@ -3,19 +3,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { motion } from 'motion/react';
-import {
-  ArrowLeft,
-  User,
-  Calendar,
-  MapPin,
-  Clock,
-  ChevronRight,
-  LogOut,
-  Edit,
-  X,
-  Mail,
-  Phone,
-} from 'lucide-react';
+import { ArrowLeft, User, Calendar, Edit } from 'lucide-react';
 import { useState } from 'react';
 import { Footer } from './Footer';
 import { mockUser, bookings as initialBookings } from '../data/mockData';
@@ -240,7 +228,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
                   <p className="text-gray-600 mb-4">Chưa có đặt bàn nào</p>
                   <Button
                     onClick={() => onNavigate('home')}
-                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl"
+                    className="bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl"
                   >
                     Đặt bàn ngay
                   </Button>

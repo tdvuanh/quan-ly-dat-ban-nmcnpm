@@ -187,7 +187,7 @@ export function NotificationPopup({ isOpen, onClose, anchorRef }: NotificationPo
                     >
                       <div className="flex items-start gap-3">
                         <div
-                          className={`w-10 h-10 rounded-xl ${getNotificationBgColor(notification.type)} flex items-center justify-center flex-shrink-0`}
+                          className={`w-10 h-10 rounded-xl ${getNotificationBgColor(notification.type)} flex items-center justify-center shrink-0`}
                         >
                           {getNotificationIcon(notification.type)}
                         </div>

@@ -2,9 +2,8 @@ import { useState, useRef } from 'react';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
 import { motion } from 'motion/react';
-import { Calendar, History, User, LogOut, Users, Bell, MapPin, Search, Clock } from 'lucide-react';
+import { Calendar, User, Users, Bell, MapPin, Clock } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Footer } from './Footer';
 import { tables } from '../data/mockData';
@@ -39,10 +38,11 @@ const mockBookedHours: { [tableId: string]: string[] } = {
 };
 
 export function HomeScreen({ onNavigate }: HomeScreenProps) {
-  const [selectedArea, setSelectedArea] = useState<string | null>(null);
-  const [searchDate, setSearchDate] = useState('2025-11-04');
+  const buttonElement = document.getElementById('notificationPopup') as HTMLButtonElement;
+  // const [selectedArea, setSelectedArea] = useState<string | null>(null);
+  // const [searchDa  te, setSearchDate] = useState('2025-11-04');
   const [showNotifications, setShowNotifications] = useState(false);
-  const notificationButtonRef = useRef<HTMLButtonElement>(null);
+  const notificationButtonRef = useRef<HTMLButtonElement>(buttonElement);
 
   // Available Hours Dialog State
   const [isAvailableHoursDialogOpen, setIsAvailableHoursDialogOpen] = useState(false);
@@ -170,7 +170,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
         >
           <Button
             onClick={() => onNavigate('booking')}
-            className="max-w-xs w-full h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl shadow-lg shadow-orange-200"
+            className="max-w-xs w-full h-12 bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl shadow-lg shadow-orange-200"
           >
             <Calendar className="w-5 h-5 mr-2" />
             Đặt bàn ngay
@@ -234,7 +234,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
                           e.stopPropagation();
                           onNavigate('booking', { tableId: table.id });
                         }}
-                        className="flex-1 text-xs rounded-xl h-8 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+                        className="flex-1 text-xs rounded-xl h-8 bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
                       >
                         Đặt ngay
                       </Button>
@@ -286,7 +286,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
                       ${
                         isBooked
                           ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
-                          : 'bg-gradient-to-r from-green-50 to-green-100 text-green-700 hover:from-green-100 hover:to-green-200 hover:shadow-md cursor-pointer border-2 border-green-200'
+                          : 'bg-linear-to-r from-green-50 to-green-100 text-green-700 hover:from-green-100 hover:to-green-200 hover:shadow-md cursor-pointer border-2 border-green-200'
                       }
                     `}
                   >
@@ -299,7 +299,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
             {/* Legend */}
             <div className="mt-6 flex items-center justify-center gap-6">
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-200"></div>
+                <div className="w-4 h-4 rounded bg-linear-to-r from-green-50 to-green-100 border-2 border-green-200"></div>
                 <span className="text-xs text-gray-600">Giờ trống</span>
               </div>
               <div className="flex items-center gap-2">
