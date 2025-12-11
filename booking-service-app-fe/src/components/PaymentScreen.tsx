@@ -1,29 +1,17 @@
 import { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Label } from './ui/label';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
-import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+
 import { motion } from 'motion/react';
-import {
-  ArrowLeft,
-  CreditCard,
-  Wallet,
-  QrCode,
-  CheckCircle2,
-  User,
-  Phone,
-  Calendar,
-  Users,
-  MapPin,
-  Clock,
-} from 'lucide-react';
+import { ArrowLeft, QrCode, CheckCircle2, Calendar, Users, MapPin, Clock } from 'lucide-react';
 import { useNotification } from '../context/NotificationContext';
 import { Footer } from './Footer';
+import type { Screen } from '../config';
 
 interface PaymentScreenProps {
-  onNavigate: (screen: string, data?: any) => void;
+  onNavigate: (screen: Screen, data?: any) => void;
   bookingData?: any;
 }
 
@@ -37,6 +25,7 @@ export function PaymentScreen({ onNavigate, bookingData }: PaymentScreenProps) {
 
   const handlePayment = () => {
     setIsProcessing(true);
+    setPaymentMethod('banking');
     // Simulate payment processing
     setTimeout(() => {
       setIsProcessing(false);

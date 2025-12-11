@@ -8,9 +8,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Footer } from './Footer';
 import { tables } from '../data/mockData';
 import { NotificationPopup } from './NotificationPopup';
+import type { Screen } from '../config';
 
 interface HomeScreenProps {
-  onNavigate: (screen: string, data?: any) => void;
+  onNavigate: (screen: Screen, data?: any) => void;
 }
 
 // Generate time slots từ 10:00 đến 22:00
@@ -37,7 +38,16 @@ const mockBookedHours: { [tableId: string]: string[] } = {
   '8': ['13:00', '14:00', '19:00', '20:00', '21:00'],
 };
 
-export function HomeScreen({ onNavigate }: HomeScreenProps) {
+/*************  ✨ Windsurf Command ⭐  *************/
+/**
+ * HomeScreen component
+ * @param {HomeScreenProps} props - props for HomeScreen component
+ * @returns {JSX.Element} - JSX element for HomeScreen component
+ * @description HomeScreen component displays a list of tables and their status, and allows users to book a table
+ */
+/*******  ab01319e-d8fe-49dc-88d6-b15b7e66ae83  *******/ export function HomeScreen({
+  onNavigate,
+}: HomeScreenProps) {
   const buttonElement = document.getElementById('notificationPopup') as HTMLButtonElement;
   // const [selectedArea, setSelectedArea] = useState<string | null>(null);
   // const [searchDa  te, setSearchDate] = useState('2025-11-04');
