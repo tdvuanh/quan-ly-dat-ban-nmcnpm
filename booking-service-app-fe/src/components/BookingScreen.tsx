@@ -15,9 +15,10 @@ import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Footer } from './Footer';
 import { useNotification } from '../context/NotificationContext';
+import type { Screen } from '../config';
 
 interface BookingScreenProps {
-  onNavigate: (screen: string, data?: any) => void;
+  onNavigate: (screen: Screen, data?: any) => void;
   initialData?: { tableId?: string };
 }
 

@@ -4,13 +4,14 @@ import { Badge } from './ui/badge';
 import { motion } from 'motion/react';
 import { ArrowLeft, List } from 'lucide-react';
 import { tables, areas } from '../data/mockData';
+import type { Screen } from '../config';
 
 interface Table {
   tableId: string;
 }
 
 interface TableMapScreenProps {
-  onNavigate: (screen: string, table?: Table) => void;
+  onNavigate: (screen: Screen, table?: Table) => void;
   initialArea?: string;
 }
 

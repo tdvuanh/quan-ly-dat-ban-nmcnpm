@@ -2,20 +2,12 @@ import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { motion } from 'motion/react';
-import {
-  ArrowLeft,
-  CheckCircle,
-  Gift,
-  Clock,
-  Info,
-  Bell,
-  Trash2,
-  UtensilsCrossed,
-} from 'lucide-react';
+import { ArrowLeft, CheckCircle, Gift, Info, Bell, Trash2, UtensilsCrossed } from 'lucide-react';
 import { notifications as mockNotifications } from '../data/mockData';
+import type { Screen } from '../config';
 
 interface NotificationScreenProps {
-  onNavigate: (screen: string) => void;
+  onNavigate: (screen: Screen) => void;
 }
 
 export function NotificationScreen({ onNavigate }: NotificationScreenProps) {

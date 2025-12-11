@@ -1,9 +1,10 @@
+import type { Screen } from '../config';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Download, ArrowLeft } from 'lucide-react';
 
 interface LogoPageProps {
-  onNavigate: (screen: string) => void;
+  onNavigate: (screen: Screen) => void;
 }
 
 export function LogoPage({ onNavigate }: LogoPageProps) {

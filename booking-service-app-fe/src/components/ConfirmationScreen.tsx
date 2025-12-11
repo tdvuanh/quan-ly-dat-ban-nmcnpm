@@ -13,9 +13,10 @@ import {
   MapPin,
 } from 'lucide-react';
 import { Footer } from './Footer';
+import type { Screen } from '../config';
 
 interface ConfirmationScreenProps {
-  onNavigate: (screen: string, bookingData?: any) => void;
+  onNavigate: (screen: Screen, bookingData?: any) => void;
   bookingData?: any;
 }
 

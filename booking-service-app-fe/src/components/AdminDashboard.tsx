@@ -44,9 +44,10 @@ import { Footer } from './Footer';
 import { useNotification } from '../context/NotificationContext';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import type { Screen } from '../config';
 
 interface AdminDashboardProps {
-  onNavigate: (screen: string) => void;
+  onNavigate: (screen: Screen) => void;
 }
 
 // Generate time slots từ 10:00 đến 22:00

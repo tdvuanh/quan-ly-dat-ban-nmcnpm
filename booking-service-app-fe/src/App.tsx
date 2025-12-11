@@ -48,6 +48,7 @@ export default function App() {
 
   const handleLogin = (role: 'guest' | 'staff') => {
     setUserRole(role);
+    console.log(userRole);
     if (role === 'staff') {
       setCurrentScreen('admin');
     } else {

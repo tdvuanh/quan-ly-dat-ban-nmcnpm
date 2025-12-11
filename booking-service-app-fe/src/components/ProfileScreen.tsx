@@ -11,9 +11,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { useNotification } from '../context/NotificationContext';
+import type { Screen } from '../config';
 
 interface ProfileScreenProps {
-  onNavigate: (screen: string) => void;
+  onNavigate: (screen: Screen) => void;
 }
 
 export function ProfileScreen({ onNavigate }: ProfileScreenProps) {

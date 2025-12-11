@@ -4,9 +4,10 @@ import { Badge } from './ui/badge';
 import { motion } from 'motion/react';
 import { CheckCircle, Home, Receipt } from 'lucide-react';
 import { Footer } from './Footer';
+import type { Screen } from '../config';
 
 interface PaymentSuccessScreenProps {
-  onNavigate: (screen: string) => void;
+  onNavigate: (screen: Screen) => void;
   paymentData?: any;
 }
 
@@ -15,7 +16,7 @@ export function PaymentSuccessScreen({ onNavigate, paymentData }: PaymentSuccess
   const now = new Date();
   const currentTime = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
   const currentDate = now.toLocaleDateString('vi-VN');
-  const formattedDateTime = `${currentTime} ${currentDate}`;
+  // const formattedDateTime = `${currentTime} ${currentDate}`;
 
   const getPaymentMethodText = (method: string) => {
     switch (method) {

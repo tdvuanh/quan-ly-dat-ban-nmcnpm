@@ -10,7 +10,8 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "prepare": "husky"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.3",
@@ -49,7 +50,7 @@
     "lucide-react": "^0.487.0",
     "motion": "*",
     "next-themes": "^0.4.6",
-    "react": "^19.1.1",
+    "react": "^19.2.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.55.0",
