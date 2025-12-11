@@ -1,0 +1,3 @@
+packages:
+  - "booking-service-app-fe/*"
+  - "booking-service-be/*"
