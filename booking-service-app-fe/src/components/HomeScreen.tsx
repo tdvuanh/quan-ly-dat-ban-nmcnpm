@@ -9,6 +9,7 @@ import { Footer } from './Footer';
 import { tables } from '../data/mockData';
 import { NotificationPopup } from './NotificationPopup';
 import type { Screen } from '../config';
+import { useTables } from '../hook/queries/useTables';
 
 interface HomeScreenProps {
   onNavigate: (screen: Screen, data?: any) => void;
@@ -45,9 +46,7 @@ const mockBookedHours: { [tableId: string]: string[] } = {
  * @returns {JSX.Element} - JSX element for HomeScreen component
  * @description HomeScreen component displays a list of tables and their status, and allows users to book a table
  */
-/*******  ab01319e-d8fe-49dc-88d6-b15b7e66ae83  *******/ export function HomeScreen({
-  onNavigate,
-}: HomeScreenProps) {
+export function HomeScreen({ onNavigate }: HomeScreenProps) {
   const buttonElement = document.getElementById('notificationPopup') as HTMLButtonElement;
   // const [selectedArea, setSelectedArea] = useState<string | null>(null);
   // const [searchDa  te, setSearchDate] = useState('2025-11-04');

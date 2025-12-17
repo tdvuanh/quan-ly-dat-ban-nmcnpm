@@ -14,6 +14,8 @@ import { NotificationScreen } from './components/NotificationScreen';
 import { setFavicon, setDocumentTitle } from './utils/favicon';
 import { NotificationProvider } from './context/NotificationContext';
 
+import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
+
 type Screen =
   | 'splash'
   | 'login'
@@ -27,6 +29,8 @@ type Screen =
   | 'admin'
   | 'logo'
   | 'notifications';
+
+const queryClient = new QueryClient();
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
@@ -100,7 +104,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-white">
-      <NotificationProvider>{renderScreen()}</NotificationProvider>
+      <QueryClientProvider client={queryClient}>
+        <NotificationProvider>{renderScreen()}</NotificationProvider>
+      </QueryClientProvider>
     </div>
   );
 }
