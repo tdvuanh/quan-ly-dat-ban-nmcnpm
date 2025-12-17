@@ -21,6 +21,7 @@ export default [
   ...compat.extends('plugin:prettier/recommended'),
 
   {
+    ignores: ['dist', 'node_modules', '*.config.js'],
     languageOptions: {
       parser: tsParser,
       ecmaVersion: 'latest',
