@@ -1,21 +1,21 @@
 import { useState } from 'react';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Card } from './ui/card';
-import { Badge } from './ui/badge';
+import { Button } from '@/components/ui/button';
+
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 import { motion } from 'motion/react';
 import { ArrowLeft, QrCode, CheckCircle2, Calendar, Users, MapPin, Clock } from 'lucide-react';
-import { useNotification } from '../context/NotificationContext';
-import { Footer } from './Footer';
-import type { Screen } from '../config';
+import { useNotification } from '@/context/NotificationContext';
+import { Footer } from '@/components/Footer';
+import { useNavigate } from 'react-router-dom';
 
 interface PaymentScreenProps {
-  onNavigate: (screen: Screen, data?: any) => void;
   bookingData?: any;
 }
 
-export function PaymentScreen({ onNavigate, bookingData }: PaymentScreenProps) {
+export function PaymentScreen({ bookingData }: PaymentScreenProps) {
+  const navigate = useNavigate();
   const [paymentMethod, setPaymentMethod] = useState('banking');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -34,10 +34,12 @@ export function PaymentScreen({ onNavigate, bookingData }: PaymentScreenProps) {
 
       // Navigate to success screen after 1.5s
       setTimeout(() => {
-        onNavigate('paymentSuccess', {
-          ...bookingData,
-          amount: depositAmount,
-          paymentMethod,
+        navigate('/payment-success', {
+          state: {
+            ...bookingData,
+            amount: depositAmount,
+            paymentMethod,
+          },
         });
       }, 1500);
     }, 2000);
@@ -67,7 +69,7 @@ export function PaymentScreen({ onNavigate, bookingData }: PaymentScreenProps) {
       <div className="bg-white shadow-sm px-6 py-4">
         <div className="flex items-center justify-between">
           <button
-            onClick={() => onNavigate('confirmation', bookingData)}
+            onClick={() => navigate('/confirmation', { state: { ...bookingData } })}
             className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
             disabled={isProcessing}
           >

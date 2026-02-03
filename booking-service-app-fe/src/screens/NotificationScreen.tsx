@@ -1,16 +1,14 @@
-import { Button } from './ui/button';
-import { Card } from './ui/card';
-import { Badge } from './ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { motion } from 'motion/react';
 import { ArrowLeft, CheckCircle, Gift, Info, Bell, Trash2, UtensilsCrossed } from 'lucide-react';
-import { notifications as mockNotifications } from '../data/mockData';
-import type { Screen } from '../config';
+import { notifications as mockNotifications } from '@/data/mockData';
 
-interface NotificationScreenProps {
-  onNavigate: (screen: Screen) => void;
-}
+import { useNavigate } from 'react-router-dom';
 
-export function NotificationScreen({ onNavigate }: NotificationScreenProps) {
+export function NotificationScreen() {
+  const navigate = useNavigate();
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'booking':
@@ -69,7 +67,7 @@ export function NotificationScreen({ onNavigate }: NotificationScreenProps) {
       <div className="bg-white shadow-sm px-6 py-4">
         <div className="flex items-center justify-between mb-4">
           <button
-            onClick={() => onNavigate('home')}
+            onClick={() => navigate('/home')}
             className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -204,7 +202,7 @@ export function NotificationScreen({ onNavigate }: NotificationScreenProps) {
               sẽ hiển thị tại đây
             </p>
             <Button
-              onClick={() => onNavigate('home')}
+              onClick={() => navigate('/home')}
               className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl"
             >
               Quay về trang chủ

@@ -1,28 +1,35 @@
 import { useState } from 'react';
-import { Button } from './ui/button';
-import { Card } from './ui/card';
-import { Badge } from './ui/badge';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Textarea } from './ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Calendar as CalendarComponent } from './ui/calendar';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { motion } from 'motion/react';
 import { ArrowLeft, Users, Calendar, Clock, MessageSquare, User, Phone } from 'lucide-react';
 import { tables, areas, generateTimeSlots } from '../data/mockData';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { Footer } from './Footer';
-import { useNotification } from '../context/NotificationContext';
-import type { Screen } from '../config';
+import { Footer } from '@/components/Footer';
+import { useNotification } from '@/context/NotificationContext';
+import type { Screen } from '@/config';
+import { useNavigate } from 'react-router-dom';
 
 interface BookingScreenProps {
-  onNavigate: (screen: Screen, data?: any) => void;
   initialData?: { tableId?: string };
 }
 
-export function BookingScreen({ onNavigate, initialData }: BookingScreenProps) {
+export function BookingScreen({ initialData }: BookingScreenProps) {
+  const navigate = useNavigate();
   const [selectedTableId, setSelectedTableId] = useState(initialData?.tableId || '');
   const [date, setDate] = useState<Date>(new Date());
   const [selectedTime, setSelectedTime] = useState('');
@@ -87,7 +94,7 @@ export function BookingScreen({ onNavigate, initialData }: BookingScreenProps) {
       customerName,
       phoneNumber,
     };
-    onNavigate('confirmation', bookingData);
+    navigate('/confirmation', { state: { ...bookingData } });
   };
 
   return (
@@ -96,7 +103,7 @@ export function BookingScreen({ onNavigate, initialData }: BookingScreenProps) {
       <div className="bg-white shadow-sm px-6 py-4">
         <div className="flex items-center justify-between">
           <button
-            onClick={() => onNavigate('home')}
+            onClick={() => navigate('/home')}
             className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />

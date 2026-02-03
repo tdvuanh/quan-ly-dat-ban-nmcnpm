@@ -15,7 +15,7 @@ export function Footer() {
             className="flex items-center gap-2 text-sm text-orange-600 hover:text-orange-700 transition-colors"
           >
             <Github className="w-4 h-4" />
-            <span>tdvuanh</span>
+            <span>nhom4</span>
           </a>
         </div>
       </div>
