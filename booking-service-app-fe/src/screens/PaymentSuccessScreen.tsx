@@ -1,17 +1,17 @@
-import { Button } from './ui/button';
-import { Card } from './ui/card';
-import { Badge } from './ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { motion } from 'motion/react';
 import { CheckCircle, Home, Receipt } from 'lucide-react';
-import { Footer } from './Footer';
-import type { Screen } from '../config';
+import { Footer } from '@/components/Footer';
+import { useNavigate } from 'react-router-dom';
 
 interface PaymentSuccessScreenProps {
-  onNavigate: (screen: Screen) => void;
   paymentData?: any;
 }
 
-export function PaymentSuccessScreen({ onNavigate, paymentData }: PaymentSuccessScreenProps) {
+export function PaymentSuccessScreen({ paymentData }: PaymentSuccessScreenProps) {
+  const navigate = useNavigate();
   const bookingCode = `BK${Date.now().toString().slice(-6)}`;
   const now = new Date();
   const currentTime = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
@@ -117,7 +117,7 @@ export function PaymentSuccessScreen({ onNavigate, paymentData }: PaymentSuccess
           {/* Actions */}
           <div className="space-y-3">
             <Button
-              onClick={() => onNavigate('home')}
+              onClick={() => navigate('/home')}
               className="w-full h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl"
             >
               <Home className="w-5 h-5 mr-2" />
@@ -125,7 +125,7 @@ export function PaymentSuccessScreen({ onNavigate, paymentData }: PaymentSuccess
             </Button>
 
             <button
-              onClick={() => onNavigate('profile')}
+              onClick={() => navigate('/profile')}
               className="w-full text-center text-sm text-gray-600 py-2"
             >
               Xem lịch sử đặt bàn

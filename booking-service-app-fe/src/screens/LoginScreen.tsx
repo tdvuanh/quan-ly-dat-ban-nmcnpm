@@ -1,13 +1,26 @@
-import { Button } from './ui/button';
+import { Button } from '@/components/ui/button';
 import { motion } from 'motion/react';
 import { Users, UserCog } from 'lucide-react';
-import { Footer } from './Footer';
+import { Footer } from '@/components/Footer';
+import { useNavigate } from 'react-router-dom';
 
 interface LoginScreenProps {
   onLogin: (role: 'guest' | 'staff') => void;
 }
 
 export function LoginScreen({ onLogin }: LoginScreenProps) {
+  const navigate = useNavigate();
+
+  const onGuestLogin = () => {
+    onLogin('guest');
+    navigate('/home', { replace: true });
+  };
+
+  const onStaffLogin = () => {
+    onLogin('staff');
+    navigate('/admin', { replace: true });
+  };
+
   return (
     <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-orange-50 flex flex-col px-6 py-8">
       {/* Logo - Top Left */}
@@ -38,7 +51,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               transition={{ delay: 0.3 }}
             >
               <Button
-                onClick={() => onLogin('guest')}
+                onClick={onGuestLogin}
                 className="w-full h-20 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl shadow-lg shadow-orange-200 flex items-center justify-start px-8"
               >
                 <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mr-4">
@@ -57,7 +70,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               transition={{ delay: 0.4 }}
             >
               <Button
-                onClick={() => onLogin('staff')}
+                onClick={onStaffLogin}
                 variant="outline"
                 className="w-full h-20 rounded-2xl border-2 border-orange-200 hover:bg-orange-50 flex items-center justify-start px-8"
               >

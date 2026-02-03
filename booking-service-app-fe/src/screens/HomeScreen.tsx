@@ -1,19 +1,21 @@
 import { useState, useRef } from 'react';
-import { Card } from './ui/card';
-import { Badge } from './ui/badge';
-import { Button } from './ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { motion } from 'motion/react';
 import { Calendar, User, Users, Bell, MapPin, Clock } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
-import { Footer } from './Footer';
-import { tables } from '../data/mockData';
-import { NotificationPopup } from './NotificationPopup';
-import type { Screen } from '../config';
-import { useTables } from '../hook/queries/useTables';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Footer } from '@/components/Footer';
+import { tables } from '@/data/mockData';
+import { NotificationPopup } from '@/components/NotificationPopup';
 
-interface HomeScreenProps {
-  onNavigate: (screen: Screen, data?: any) => void;
-}
+import { useNavigate } from 'react-router-dom';
 
 // Generate time slots từ 10:00 đến 22:00
 const generateOperatingHours = () => {
@@ -46,7 +48,8 @@ const mockBookedHours: { [tableId: string]: string[] } = {
  * @returns {JSX.Element} - JSX element for HomeScreen component
  * @description HomeScreen component displays a list of tables and their status, and allows users to book a table
  */
-export function HomeScreen({ onNavigate }: HomeScreenProps) {
+export function HomeScreen() {
+  const navigate = useNavigate();
   const buttonElement = document.getElementById('notificationPopup') as HTMLButtonElement;
   // const [selectedArea, setSelectedArea] = useState<string | null>(null);
   // const [searchDa  te, setSearchDate] = useState('2025-11-04');
@@ -117,7 +120,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
               <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full"></span>
             </button>
             <button
-              onClick={() => onNavigate('profile')}
+              onClick={() => navigate('/profile')}
               className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center hover:bg-orange-200 transition-colors"
             >
               <User className="w-5 h-5 text-orange-600" />
@@ -178,7 +181,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
           className="mb-6"
         >
           <Button
-            onClick={() => onNavigate('booking')}
+            onClick={() => navigate('/booking')}
             className="max-w-xs w-full h-12 bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl shadow-lg shadow-orange-200"
           >
             <Calendar className="w-5 h-5 mr-2" />
@@ -241,7 +244,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onNavigate('booking', { tableId: table.id });
+                          navigate('/booking', { state: { tableId: table.id } });
                         }}
                         className="flex-1 text-xs rounded-xl h-8 bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
                       >
@@ -286,7 +289,9 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
                     disabled={isBooked}
                     onClick={() => {
                       if (!isBooked) {
-                        onNavigate('booking', { tableId: selectedTableForHours?.id, time: hour });
+                        navigate('/booking', {
+                          state: { tableId: selectedTableForHours?.id, time: hour },
+                        });
                         setIsAvailableHoursDialogOpen(false);
                       }
                     }}

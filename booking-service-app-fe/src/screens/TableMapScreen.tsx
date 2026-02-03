@@ -1,21 +1,22 @@
 import { useState } from 'react';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { motion } from 'motion/react';
 import { ArrowLeft, List } from 'lucide-react';
 import { tables, areas } from '../data/mockData';
-import type { Screen } from '../config';
+
+import { useNavigate } from 'react-router-dom';
 
 interface Table {
   tableId: string;
 }
 
 interface TableMapScreenProps {
-  onNavigate: (screen: Screen, table?: Table) => void;
   initialArea?: string;
 }
 
-export function TableMapScreen({ onNavigate, initialArea }: TableMapScreenProps) {
+export function TableMapScreen({ initialArea }: TableMapScreenProps) {
+  const navigate = useNavigate();
   const [selectedArea, setSelectedArea] = useState(initialArea || 'floor1');
 
   const areaTables = tables.filter((t) => t.area === selectedArea);
@@ -56,14 +57,14 @@ export function TableMapScreen({ onNavigate, initialArea }: TableMapScreenProps)
       <div className="bg-white shadow-sm px-6 py-4">
         <div className="flex items-center justify-between mb-4">
           <button
-            onClick={() => onNavigate('home')}
+            onClick={() => navigate('/home')}
             className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </button>
           <h2 className="text-gray-900">Sơ đồ bàn</h2>
           <button
-            onClick={() => onNavigate('home')}
+            onClick={() => navigate('/home')}
             className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
           >
             <List className="w-5 h-5 text-gray-600" />
@@ -141,7 +142,7 @@ export function TableMapScreen({ onNavigate, initialArea }: TableMapScreenProps)
                 <button
                   onClick={() => {
                     if (table.status === 'available') {
-                      onNavigate('booking', { tableId: table.id });
+                      navigate('/booking', { state: { tableId: table.id } });
                     }
                   }}
                   className={`w-20 h-20 rounded-2xl ${getStatusColor(table.status)} text-white shadow-lg transition-all transform ${
@@ -175,7 +176,7 @@ export function TableMapScreen({ onNavigate, initialArea }: TableMapScreenProps)
       {/* Bottom Action */}
       <div className="bg-white border-t border-gray-100 px-6 py-4">
         <Button
-          onClick={() => onNavigate('booking')}
+          onClick={() => navigate('/booking')}
           className="w-full h-12 bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl"
         >
           Đặt bàn ngay

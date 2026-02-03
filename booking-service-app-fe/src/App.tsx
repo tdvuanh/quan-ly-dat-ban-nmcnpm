@@ -1,112 +1,69 @@
-import { useState, useEffect } from 'react';
-import { SplashScreen } from './components/SplashScreen';
-import { LoginScreen } from './components/LoginScreen';
-import { HomeScreen } from './components/HomeScreen';
-import { BookingScreen } from './components/BookingScreen';
-import { ConfirmationScreen } from './components/ConfirmationScreen';
-import { PaymentScreen } from './components/PaymentScreen';
-import { PaymentSuccessScreen } from './components/PaymentSuccessScreen';
-import { ProfileScreen } from './components/ProfileScreen';
-import { TableMapScreen } from './components/TableMapScreen';
-import { AdminDashboard } from './components/AdminDashboard';
-import { LogoPage } from './components/LogoPage';
-import { NotificationScreen } from './components/NotificationScreen';
-import { setFavicon, setDocumentTitle } from './utils/favicon';
-import { NotificationProvider } from './context/NotificationContext';
+import { useEffect, useState } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
-import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
+import { SplashScreen } from '@/screens/SplashScreen';
+import { LoginScreen } from '@/screens/LoginScreen';
+import { HomeScreen } from '@/screens/HomeScreen';
+import { BookingScreen } from '@/screens/BookingScreen';
+import { ConfirmationScreen } from '@/screens/ConfirmationScreen';
+import { PaymentScreen } from '@/screens/PaymentScreen';
+import { PaymentSuccessScreen } from '@/screens/PaymentSuccessScreen';
+import { ProfileScreen } from '@/screens/ProfileScreen';
+import { TableMapScreen } from '@/screens/TableMapScreen';
+import { AdminDashboard } from '@/screens/AdminDashboard';
+import { LogoPage } from '@/components/LogoPage';
+import { NotificationScreen } from '@/screens/NotificationScreen';
 
-type Screen =
-  | 'splash'
-  | 'login'
-  | 'home'
-  | 'booking'
-  | 'confirmation'
-  | 'payment'
-  | 'paymentSuccess'
-  | 'profile'
-  | 'tableMap'
-  | 'admin'
-  | 'logo'
-  | 'notifications';
+import { setFavicon, setDocumentTitle } from '@/utils/favicon';
+import { NotificationProvider } from '@/context/NotificationContext';
+
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const queryClient = new QueryClient();
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
-  const [bookingData, setBookingData] = useState<any>(null);
   const [userRole, setUserRole] = useState<'guest' | 'staff'>('guest');
 
-  // Set favicon and title on mount
   useEffect(() => {
     setFavicon();
     setDocumentTitle('Quản Lý Đặt Bàn - Dễ dàng & Nhanh chóng');
   }, []);
 
-  const handleNavigate = (screen: Screen, data?: any) => {
-    setCurrentScreen(screen);
-    if (data) {
-      setBookingData(data);
-    }
-  };
-
-  const handleLogin = (role: 'guest' | 'staff') => {
-    setUserRole(role);
-    console.log(userRole);
-    if (role === 'staff') {
-      setCurrentScreen('admin');
-    } else {
-      setCurrentScreen('home');
-    }
-  };
-
-  const renderScreen = () => {
-    switch (currentScreen) {
-      case 'splash':
-        return <SplashScreen onFinish={() => setCurrentScreen('login')} />;
-
-      case 'login':
-        return <LoginScreen onLogin={handleLogin} />;
-
-      case 'home':
-        return <HomeScreen onNavigate={handleNavigate} />;
-
-      case 'booking':
-        return <BookingScreen onNavigate={handleNavigate} initialData={bookingData} />;
-
-      case 'confirmation':
-        return <ConfirmationScreen onNavigate={handleNavigate} bookingData={bookingData} />;
-
-      case 'payment':
-        return <PaymentScreen onNavigate={handleNavigate} bookingData={bookingData} />;
-
-      case 'paymentSuccess':
-        return <PaymentSuccessScreen onNavigate={handleNavigate} paymentData={bookingData} />;
-
-      case 'profile':
-        return <ProfileScreen onNavigate={handleNavigate} />;
-
-      case 'tableMap':
-        return <TableMapScreen onNavigate={handleNavigate} initialArea={bookingData?.area} />;
-
-      case 'admin':
-        return <AdminDashboard onNavigate={handleNavigate} />;
-
-      case 'logo':
-        return <LogoPage onNavigate={handleNavigate} />;
-
-      case 'notifications':
-        return <NotificationScreen onNavigate={handleNavigate} />;
-
-      default:
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-white">
-      <QueryClientProvider client={queryClient}>
-        <NotificationProvider>{renderScreen()}</NotificationProvider>
-      </QueryClientProvider>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <NotificationProvider>
+        <div className="min-h-screen bg-white">
+          <Routes>
+            {/* Splash */}
+            <Route path="/" element={<SplashScreen />} />
+
+            {/* Auth */}
+            <Route path="/login" element={<LoginScreen onLogin={(role) => setUserRole(role)} />} />
+
+            {/* Guest routes */}
+            <Route path="/home" element={<HomeScreen />} />
+            <Route path="/booking" element={<BookingScreen />} />
+            <Route path="/confirmation" element={<ConfirmationScreen />} />
+            <Route path="/payment" element={<PaymentScreen />} />
+            <Route path="/payment-success" element={<PaymentSuccessScreen />} />
+            <Route path="/profile" element={<ProfileScreen />} />
+            <Route path="/table-map" element={<TableMapScreen />} />
+            <Route path="/notifications" element={<NotificationScreen />} />
+
+            {/* Admin */}
+            <Route
+              path="/admin"
+              element={userRole === 'staff' ? <AdminDashboard /> : <Navigate to="/login" replace />}
+            />
+
+            {/* Misc */}
+            <Route path="/logo" element={<LogoPage />} />
+
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      </NotificationProvider>
+    </QueryClientProvider>
   );
 }

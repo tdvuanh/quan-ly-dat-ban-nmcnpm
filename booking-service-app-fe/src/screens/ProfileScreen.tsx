@@ -1,23 +1,27 @@
-import { Card } from './ui/card';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'motion/react';
 import { ArrowLeft, User, Calendar, Edit } from 'lucide-react';
 import { useState } from 'react';
-import { Footer } from './Footer';
-import { mockUser, bookings as initialBookings } from '../data/mockData';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
-import { Label } from './ui/label';
-import { Textarea } from './ui/textarea';
-import { useNotification } from '../context/NotificationContext';
-import type { Screen } from '../config';
+import { Footer } from '@/components/Footer';
+import { mockUser, bookings as initialBookings } from '@/data/mockData';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useNotification } from '@/context/NotificationContext';
 
-interface ProfileScreenProps {
-  onNavigate: (screen: Screen) => void;
-}
+import { useNavigate } from 'react-router-dom';
 
-export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
+export function ProfileScreen() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('bookings');
   const [bookings, setBookings] = useState(initialBookings);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
@@ -137,7 +141,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
       <div className="bg-white shadow-sm px-6 py-4">
         <div className="flex items-center justify-between mb-4">
           <button
-            onClick={() => onNavigate('home')}
+            onClick={() => navigate('/home')}
             className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -228,7 +232,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
                   </div>
                   <p className="text-gray-600 mb-4">Chưa có đặt bàn nào</p>
                   <Button
-                    onClick={() => onNavigate('home')}
+                    onClick={() => navigate('/home')}
                     className="bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl"
                   >
                     Đặt bàn ngay
@@ -269,7 +273,7 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
           className="mt-8"
         >
           <Button
-            onClick={() => onNavigate('login')}
+            onClick={() => navigate('/login')}
             variant="outline"
             className="w-full h-12 rounded-2xl border-2 border-red-200 text-red-600 hover:bg-red-50"
           >

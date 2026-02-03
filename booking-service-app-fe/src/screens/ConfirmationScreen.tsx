@@ -1,6 +1,6 @@
-import { Button } from './ui/button';
-import { Card } from './ui/card';
-import { Badge } from './ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { motion } from 'motion/react';
 import {
   CheckCircle,
@@ -12,22 +12,23 @@ import {
   Clock,
   MapPin,
 } from 'lucide-react';
-import { Footer } from './Footer';
-import type { Screen } from '../config';
+import { Footer } from '@/components/Footer';
+import type { Screen } from '@/config';
+import { useNavigate } from 'react-router-dom';
 
 interface ConfirmationScreenProps {
-  onNavigate: (screen: Screen, bookingData?: any) => void;
   bookingData?: any;
 }
 
-export function ConfirmationScreen({ onNavigate, bookingData }: ConfirmationScreenProps) {
+export function ConfirmationScreen({ bookingData }: ConfirmationScreenProps) {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-orange-50 flex flex-col">
       {/* Header */}
       <div className="bg-white shadow-sm px-6 py-4">
         <div className="flex items-center justify-between">
           <button
-            onClick={() => onNavigate('booking', bookingData)}
+            onClick={() => navigate('/booking', { state: { ...bookingData } })}
             className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -158,7 +159,7 @@ export function ConfirmationScreen({ onNavigate, bookingData }: ConfirmationScre
           {/* Actions */}
           <div className="space-y-3">
             <Button
-              onClick={() => onNavigate('payment', bookingData)}
+              onClick={() => navigate('/payment', { state: { ...bookingData } })}
               className="w-full h-14 bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl shadow-lg shadow-orange-200"
             >
               <CreditCard className="w-5 h-5 mr-2" />
@@ -166,7 +167,7 @@ export function ConfirmationScreen({ onNavigate, bookingData }: ConfirmationScre
             </Button>
 
             <Button
-              onClick={() => onNavigate('home')}
+              onClick={() => navigate('/home')}
               variant="outline"
               className="w-full h-12 rounded-2xl border-2 border-gray-200 hover:bg-gray-50"
             >

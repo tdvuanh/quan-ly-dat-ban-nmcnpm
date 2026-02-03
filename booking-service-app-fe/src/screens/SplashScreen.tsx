@@ -1,19 +1,17 @@
 import { motion } from 'motion/react';
-import { Footer } from './Footer';
+import { Footer } from '@/components/Footer';
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-interface SplashScreenProps {
-  onFinish: () => void;
-}
-
-export function SplashScreen({ onFinish }: SplashScreenProps) {
+export function SplashScreen() {
+  const navigate = useNavigate();
   useEffect(() => {
     const timer = setTimeout(() => {
-      onFinish();
+      navigate('/login', { replace: true });
     }, 2500); // Show splash for 2.5 seconds
 
     return () => clearTimeout(timer);
-  }, [onFinish]);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-linear-to-br from-orange-50 to-white flex flex-col px-6">

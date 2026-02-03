@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Card } from './ui/card';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { motion } from 'motion/react';
 import {
   Calendar,
@@ -14,8 +14,14 @@ import {
   Phone,
   MessageSquare,
 } from 'lucide-react';
-import { Input } from './ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -23,11 +29,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from './ui/dialog';
-import { Label } from './ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Calendar as CalendarComponent } from './ui/calendar';
-import { Textarea } from './ui/textarea';
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Textarea } from '@/components/ui/textarea';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,17 +44,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from './ui/alert-dialog';
+} from '@/components/ui/alert-dialog';
 import { tables as initialTables, type Table, areas } from '../data/mockData';
-import { Footer } from './Footer';
-import { useNotification } from '../context/NotificationContext';
+import { Footer } from '@/components/Footer';
+import { useNotification } from '@/context/NotificationContext';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import type { Screen } from '../config';
-
-interface AdminDashboardProps {
-  onNavigate: (screen: Screen) => void;
-}
+import type { Screen } from '@/config';
+import { useNavigate } from 'react-router-dom';
 
 // Generate time slots từ 10:00 đến 22:00
 const generateOperatingHours = () => {
@@ -70,7 +73,8 @@ const mockBookedHours: { [tableId: string]: string[] } = {
   '4': ['10:00', '10:30', '17:00', '17:30', '18:00'],
 };
 
-export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
+export function AdminDashboard() {
+  const navigate = useNavigate();
   const [tables, setTables] = useState<Table[]>(initialTables);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -305,7 +309,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
               )}
             </button>
             <button
-              onClick={() => onNavigate('login')}
+              onClick={() => navigate('/login')}
               className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors"
             >
               <User className="w-5 h-5 text-white" />
