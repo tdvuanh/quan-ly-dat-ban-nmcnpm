@@ -16,12 +16,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { motion } from 'motion/react';
 import { ArrowLeft, Users, Calendar, Clock, MessageSquare, User, Phone } from 'lucide-react';
-import { tables, areas, generateTimeSlots } from '../data/mockData';
+import { tables, areas, generateTimeSlots } from '@/data/mockData';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Footer } from '@/components/Footer';
 import { useNotification } from '@/context/NotificationContext';
-import type { Screen } from '@/config';
 import { useNavigate } from 'react-router-dom';
 
 interface BookingScreenProps {
@@ -131,7 +130,7 @@ export function BookingScreen({ initialData }: BookingScreenProps) {
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
                     <User className="w-4 h-4 text-orange-500" />
-                    Họ và tên
+                    Họ và tên <p className="text-red-500">*</p>
                   </Label>
                   <Input
                     id="customerName"
@@ -147,7 +146,7 @@ export function BookingScreen({ initialData }: BookingScreenProps) {
                 <div className="space-y-2 relative">
                   <Label htmlFor="phoneNumber" className="flex items-center gap-2">
                     <Phone className="w-4 h-4 text-orange-500" />
-                    Số điện thoại
+                    Số điện thoại <p className="text-red-500">*</p>
                   </Label>
                   <Input
                     id="phoneNumber"
@@ -170,7 +169,7 @@ export function BookingScreen({ initialData }: BookingScreenProps) {
                         setPhoneValidationError('');
                       }
                     }}
-                    placeholder="0912345678"
+                    placeholder="Nhâp số điện thoại"
                     className={`h-12 rounded-2xl border-gray-200 ${phoneValidationError ? 'border-red-500' : ''}`}
                     maxLength={11}
                   />
@@ -235,7 +234,7 @@ export function BookingScreen({ initialData }: BookingScreenProps) {
                 <div className="space-y-2">
                   <Label htmlFor="date" className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-orange-500" />
-                    Ngày đặt
+                    Ngày đặt <p className="text-red-500">*</p>
                   </Label>
                   <Popover>
                     <PopoverTrigger asChild>
@@ -269,7 +268,7 @@ export function BookingScreen({ initialData }: BookingScreenProps) {
                 <div className="space-y-2">
                   <Label htmlFor="time" className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-orange-500" />
-                    Giờ đặt (9:00 - 21:00)
+                    Giờ đặt (9:00 - 21:00) <p className="text-red-500">*</p>
                   </Label>
                   <Select value={selectedTime} onValueChange={setSelectedTime}>
                     <SelectTrigger className="h-12 rounded-2xl border-gray-200">
@@ -287,7 +286,9 @@ export function BookingScreen({ initialData }: BookingScreenProps) {
 
                 {/* Duration */}
                 <div className="space-y-2">
-                  <Label htmlFor="duration">Thời gian (giờ)</Label>
+                  <Label htmlFor="duration">
+                    Thời gian (giờ) <p className="text-red-500">*</p>
+                  </Label>
                   <Select value={duration.toString()} onValueChange={(v) => setDuration(Number(v))}>
                     <SelectTrigger className="h-12 rounded-2xl border-gray-200">
                       <SelectValue />
