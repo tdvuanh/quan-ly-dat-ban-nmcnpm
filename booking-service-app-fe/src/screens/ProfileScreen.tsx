@@ -1,12 +1,12 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { motion } from 'motion/react';
-import { ArrowLeft, User, Calendar, Edit } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowLeft, User, Calendar, Wallet } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Footer } from '@/components/Footer';
-import { mockUser, bookings as initialBookings } from '@/data/mockData';
+import { mockUser } from '@/data/mockData';
 import {
   Dialog,
   DialogContent,
@@ -20,14 +20,78 @@ import { useNotification } from '@/context/NotificationContext';
 
 import { useNavigate } from 'react-router-dom';
 
+type WalletInfo = {
+  wallet_id: string | number;
+  user_id: string;
+  balance: string | number;
+  created_at?: string;
+  updated_at?: string;
+};
+
+type Booking = {
+  id: string;
+  user_id: string;
+  table_id?: string | null;
+  table_code: string;
+  tableCode?: string; // FE dùng
+  area?: string | null;
+  guests: number;
+  date: string;
+  time: string;
+  duration?: number | null;
+  deposit_amount: string | number; // Decimal có thể về string
+  payment_method?: string | null;
+  status: 'confirmed' | 'served' | 'cancelled';
+  created_at?: string;
+  note?: string;
+};
+
 export function ProfileScreen() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('bookings');
-  const [bookings, setBookings] = useState(initialBookings);
+  const [bookings, setBookings] = useState<any[]>([]);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [selectedBooking] = useState<any>(null);
   const [cancelReason, setCancelReason] = useState('');
+
+  const [topupAmount, setTopupAmount] = useState<number>(10000);
+  const [isTopupLoading, setIsTopupLoading] = useState(false);
+
+  const [wallet, setWallet] = useState<WalletInfo | null>(null);
+  const [isWalletDialogOpen, setIsWalletDialogOpen] = useState(false);
+  const [isWalletLoading, setIsWalletLoading] = useState(false);
+  const [walletError, setWalletError] = useState<string | null>(null);
+
   const { showSuccess, showInfo } = useNotification();
+
+  const fetchBookings = async () => {
+    try {
+      const userId = mockUser.user_id; // TODO: thay user thật
+      const res = await fetch(`http://localhost:3000/api/bookings/${userId}`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        showInfo('Lỗi', data?.message ?? 'Không lấy được lịch sử đặt bàn');
+        return;
+      }
+
+      const mapped: Booking[] = (data.bookings ?? []).map((b: any) => ({
+        ...b,
+        tableCode: b.table_code, // ✅ map để UI dùng
+        guests: Number(b.guests ?? 0),
+        duration: b.duration != null ? Number(b.duration) : null,
+      }));
+
+      setBookings(mapped);
+    } catch (e) {
+      showInfo('Lỗi', 'Không kết nối được server');
+    }
+  };
+
+  useEffect(() => {
+    fetchBookings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const confirmedBookings = bookings.filter((b) => b.status === 'confirmed');
   const servedBookings = bookings.filter((b) => b.status === 'served');
@@ -46,6 +110,57 @@ export function ProfileScreen() {
     }
   };
 
+  const fetchWallet = async () => {
+    try {
+      setIsWalletLoading(true);
+      setWalletError(null);
+
+      const res = await fetch(`http://localhost:3000/api/wallet/${mockUser.user_id}`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setWallet(null);
+        setWalletError(data?.message ?? 'Không lấy được ví');
+        return;
+      }
+
+      setWallet(data.wallet);
+    } catch (err) {
+      setWallet(null);
+      setWalletError('Lỗi kết nối server');
+    } finally {
+      setIsWalletLoading(false);
+    }
+  };
+  const handleTopup = async () => {
+    try {
+      setIsTopupLoading(true);
+
+      const res = await fetch('http://localhost:3000/api/wallet/topup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: mockUser.user_id, // nhớ dùng đúng user id
+          amount: topupAmount,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showInfo('Nạp tiền thất bại', data?.message ?? 'Không nạp được');
+        return;
+      }
+
+      showSuccess('Nạp tiền thành công', `+${topupAmount}`);
+      await fetchWallet(); // cập nhật lại ví
+    } catch (e) {
+      showInfo('Lỗi', 'Không kết nối được server');
+    } finally {
+      setIsTopupLoading(false);
+    }
+  };
+
   const BookingCard = ({ booking }: { booking: any }) => {
     // Format date and time: hh:mm dd/mm/yyyy
     const formatDateTime = (dateStr: string, timeStr: string) => {
@@ -57,7 +172,7 @@ export function ProfileScreen() {
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <p className="text-gray-900">Mã bàn: {booking.tableCode}</p>
+              <p className="text-gray-900">Mã bàn: {booking.tableCode ?? booking.table_code}</p>
               {getStatusBadge(booking.status)}
             </div>
             <div className="space-y-1.5 text-sm text-gray-600">
@@ -67,19 +182,6 @@ export function ProfileScreen() {
               </div>
             </div>
           </div>
-          {booking.status === 'confirmed' && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-xl text-red-600 border-red-200 hover:bg-red-50"
-              onClick={() => {
-                setSelectedBooking(booking);
-                setIsCancelDialogOpen(true);
-              }}
-            >
-              Hủy
-            </Button>
-          )}
         </div>
         {booking.note && (
           <div className="pt-3 border-t border-gray-100">
@@ -90,7 +192,7 @@ export function ProfileScreen() {
     );
   };
 
-  const handleCancelBooking = () => {
+  const handleCancelBooking = async () => {
     if (!selectedBooking) return;
 
     if (!cancelReason.trim()) {
@@ -98,40 +200,28 @@ export function ProfileScreen() {
       return;
     }
 
-    // Parse booking date and time
-    const bookingDateTime = new Date(`${selectedBooking.date}T${selectedBooking.time}`);
-    const now = new Date();
+    try {
+      const bookingId = selectedBooking.id; // ✅ uuid string
 
-    // Calculate time difference in hours
-    const timeDiffMs = bookingDateTime.getTime() - now.getTime();
-    const timeDiffHours = timeDiffMs / (1000 * 60 * 60);
+      const res = await fetch(`http://localhost:3000/api/bookings/${bookingId}/cancel`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cancelReason }),
+      });
 
-    // Check if cancellation is within 1 hour before booking time
-    const depositRefunded = timeDiffHours > 1;
+      const data = await res.json();
 
-    // Update booking
-    const updatedBookings = bookings.map((b) => {
-      if (b.id === selectedBooking.id) {
-        return {
-          ...b,
-          status: 'cancelled' as const,
-          cancelReason: cancelReason.trim(),
-          cancelledAt: now.toISOString(),
-          depositRefunded: depositRefunded,
-        };
+      if (!res.ok) {
+        showInfo('Hủy thất bại', data?.message ?? 'Không hủy được');
+        return;
       }
-      return b;
-    });
 
-    setBookings(updatedBookings);
-    setIsCancelDialogOpen(false);
-    setCancelReason('');
-
-    // Show notification about deposit refund
-    if (depositRefunded) {
-      showSuccess('Đã hủy đặt bàn thành công', 'Tiền cọc sẽ được hoàn lại trong vòng 24h');
-    } else {
-      showInfo('Đã hủy đặt bàn', '⚠️ Hủy trong vòng 1h trước giờ đặt - Không hoàn cọc');
+      showSuccess('Đã hủy đặt bàn', 'Booking đã được cập nhật');
+      setIsCancelDialogOpen(false);
+      setCancelReason('');
+      await fetchBookings(); // ✅ reload list để tabs cập nhật
+    } catch (e) {
+      showInfo('Lỗi', 'Không kết nối được server');
     }
   };
 
@@ -147,8 +237,17 @@ export function ProfileScreen() {
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </button>
           <h2 className="text-gray-900">Tài khoản</h2>
-          <button className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
-            <Edit className="w-5 h-5 text-gray-600" />
+
+          <button
+            onClick={() => {
+              setIsWalletDialogOpen(true);
+              fetchWallet();
+            }}
+            className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+            aria-label="Ví"
+            title="Ví"
+          >
+            <Wallet className="w-5 h-5 text-gray-600" />
           </button>
         </div>
       </div>
@@ -157,7 +256,7 @@ export function ProfileScreen() {
       <div className="flex-1 overflow-auto px-6 py-6">
         {/* User Info */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-          <Card className="p-6 rounded-3xl bg-linear-to-br from-orange-500 to-orange-600 text-white">
+          <Card className="p-6 rounded-3xl bg-gradient-to-br from-orange-500 to-orange-600 text-white">
             <div className="flex items-center">
               <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mr-4">
                 <User className="w-8 h-8 text-white" />
@@ -172,24 +271,57 @@ export function ProfileScreen() {
         </motion.div>
 
         {/* Stats */}
+        {/* Stats (clickable tabs) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="grid grid-cols-3 gap-3 mb-6"
         >
-          <Card className="p-4 rounded-2xl text-center">
-            <p className="text-orange-600 mb-1">{confirmedBookings.length}</p>
-            <p className="text-xs text-gray-600">Đã đặt</p>
-          </Card>
-          <Card className="p-4 rounded-2xl text-center">
-            <p className="text-blue-600 mb-1">{servedBookings.length}</p>
-            <p className="text-xs text-gray-600">Hoàn tất</p>
-          </Card>
-          <Card className="p-4 rounded-2xl text-center">
-            <p className="text-red-600 mb-1">{cancelledBookings.length}</p>
-            <p className="text-xs text-gray-600">Đã hủy</p>
-          </Card>
+          {/* Đã đặt */}
+          <button type="button" onClick={() => setActiveTab('bookings')}>
+            <Card
+              className={`p-4 rounded-2xl text-center border transition
+      ${
+        activeTab === 'bookings'
+          ? 'border-orange-500 bg-orange-50'
+          : 'border-gray-200 hover:border-gray-300'
+      }`}
+            >
+              <p className="text-orange-600 mb-1">{confirmedBookings.length}</p>
+              <p className="text-xs text-gray-600">Đã đặt</p>
+            </Card>
+          </button>
+
+          {/* Hoàn tất */}
+          <button type="button" onClick={() => setActiveTab('completed')}>
+            <Card
+              className={`p-4 rounded-2xl text-center border transition
+      ${
+        activeTab === 'completed'
+          ? 'border-blue-500 bg-blue-50'
+          : 'border-gray-200 hover:border-gray-300'
+      }`}
+            >
+              <p className="text-blue-600 mb-1">{servedBookings.length}</p>
+              <p className="text-xs text-gray-600">Hoàn tất</p>
+            </Card>
+          </button>
+
+          {/* Đã hủy */}
+          <button type="button" onClick={() => setActiveTab('cancelled')}>
+            <Card
+              className={`p-4 rounded-2xl text-center border transition
+      ${
+        activeTab === 'cancelled'
+          ? 'border-red-500 bg-red-50'
+          : 'border-gray-200 hover:border-gray-300'
+      }`}
+            >
+              <p className="text-red-600 mb-1">{cancelledBookings.length}</p>
+              <p className="text-xs text-gray-600">Đã hủy</p>
+            </Card>
+          </button>
         </motion.div>
 
         {/* Bookings History */}
@@ -199,28 +331,7 @@ export function ProfileScreen() {
           transition={{ delay: 0.2 }}
         >
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="w-full grid grid-cols-3 h-12 bg-white rounded-2xl p-1">
-              <TabsTrigger
-                value="bookings"
-                className="rounded-xl data-[state=active]:bg-orange-500 data-[state=active]:text-white"
-              >
-                Đã đặt
-              </TabsTrigger>
-              <TabsTrigger
-                value="completed"
-                className="rounded-xl data-[state=active]:bg-orange-500 data-[state=active]:text-white"
-              >
-                Hoàn tất
-              </TabsTrigger>
-              <TabsTrigger
-                value="cancelled"
-                className="rounded-xl data-[state=active]:bg-orange-500 data-[state=active]:text-white"
-              >
-                Đã hủy
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="bookings" className="mt-6">
+            <TabsContent value="bookings" className="mt-4">
               {confirmedBookings.length > 0 ? (
                 confirmedBookings.map((booking) => (
                   <BookingCard key={booking.id} booking={booking} />
@@ -233,7 +344,7 @@ export function ProfileScreen() {
                   <p className="text-gray-600 mb-4">Chưa có đặt bàn nào</p>
                   <Button
                     onClick={() => navigate('/home')}
-                    className="bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl"
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl"
                   >
                     Đặt bàn ngay
                   </Button>
@@ -343,6 +454,83 @@ export function ProfileScreen() {
             >
               Xác nhận hủy
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Wallet Dialog */}
+      <Dialog open={isWalletDialogOpen} onOpenChange={setIsWalletDialogOpen}>
+        <DialogContent className="rounded-3xl sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Ví của bạn</DialogTitle>
+            <DialogDescription>Thông tin ví</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div className="rounded-2xl border p-4">
+              <p className="text-xs text-gray-500">User ID</p>
+              <p className="mt-1 text-sm font-medium break-all">{mockUser.user_id}</p>
+            </div>
+
+            <div className="rounded-2xl border p-4">
+              <p className="text-xs text-gray-500">Tên</p>
+              <p className="mt-1 text-sm font-medium">{mockUser.name}</p>
+            </div>
+
+            {isWalletLoading ? (
+              <div className="rounded-2xl border p-4 text-sm text-gray-600">Đang tải ví...</div>
+            ) : walletError ? (
+              <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                {walletError}
+              </div>
+            ) : (
+              <>
+                <div className="rounded-2xl border p-4">
+                  <p className="text-xs text-gray-500">Wallet ID</p>
+                  <p className="mt-1 text-sm font-medium">
+                    {wallet?.wallet_id ?? 'Chưa có ví (hãy topup để tạo)'}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border p-4">
+                  <p className="text-xs text-gray-500">Số dư</p>
+                  <p className="mt-1 text-sm font-medium">{wallet?.balance ?? 0}</p>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="mt-4 flex gap-2">
+            <div className="rounded-2xl border p-4">
+              <p className="text-xs text-gray-500 mb-2">Số tiền nạp</p>
+              <input
+                type="number"
+                min={1000}
+                step={1000}
+                value={topupAmount}
+                onChange={(e) => setTopupAmount(Number(e.target.value))}
+                className="w-full h-11 rounded-xl border border-gray-200 px-3 outline-none"
+                placeholder="Nhập số tiền"
+              />
+            </div>
+
+            <div className="mt-4 flex gap-2">
+              <Button
+                variant="outline"
+                onClick={handleTopup}
+                disabled={isTopupLoading || topupAmount <= 0}
+                className="flex-1 h-12 rounded-2xl"
+              >
+                {isTopupLoading ? 'Đang nạp...' : 'Nạp tiền'}
+              </Button>
+
+              <Button
+                onClick={() => setIsWalletDialogOpen(false)}
+                className="flex-1 h-12 rounded-2xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+              >
+                Đóng
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

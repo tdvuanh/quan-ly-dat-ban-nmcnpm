@@ -2,38 +2,30 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'motion/react';
-import { CheckCircle, Home, Receipt } from 'lucide-react';
+import { CheckCircle, Home, Receipt, Check } from 'lucide-react';
 import { Footer } from '@/components/Footer';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-interface PaymentSuccessScreenProps {
-  paymentData?: any;
-}
-
-export function PaymentSuccessScreen({ paymentData }: PaymentSuccessScreenProps) {
+export function PaymentSuccessScreen() {
   const navigate = useNavigate();
-  const bookingCode = `BK${Date.now().toString().slice(-6)}`;
-  const now = new Date();
-  const currentTime = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-  const currentDate = now.toLocaleDateString('vi-VN');
-  // const formattedDateTime = `${currentTime} ${currentDate}`;
+  const { state } = useLocation();
+  const paymentData = state as any;
 
-  const getPaymentMethodText = (method: string) => {
+  const bookingCode = `BK${Date.now().toString().slice(-6)}`;
+
+  const getPaymentMethodText = (method?: string) => {
     switch (method) {
-      case 'card':
-        return 'Thẻ tín dụng/ghi nợ';
-      case 'momo':
-        return 'Ví MoMo';
+      case 'wallet':
+        return 'Thanh toán bằng ví';
       case 'banking':
         return 'Chuyển khoản ngân hàng';
       default:
-        return method;
+        return method ?? 'Không rõ';
     }
   };
 
   return (
     <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-orange-50 flex flex-col">
-      {/* Content */}
       <div className="flex-1 overflow-auto px-6 py-12">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
@@ -47,24 +39,24 @@ export function PaymentSuccessScreen({ paymentData }: PaymentSuccessScreenProps)
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-              className="w-24 h-24 bg-linear-to-br from-green-400 to-green-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-200"
+              className="w-24 h-24 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl shadow-green-200"
             >
-              <CheckCircle className="w-12 h-12 text-white" />
+              <Check className="w-12 h-12 text-white stroke-[3]" />
             </motion.div>
             <h2 className="text-green-600 mb-2">Đặt bàn thành công!</h2>
-            <p className="text-gray-600">
-              Cảm ơn bạn đã đặt bàn. Chúng tôi đã nhận được thanh toán của bạn.
-            </p>
+            <p className="text-gray-600">Cảm ơn bạn đã đặt bàn.</p>
           </div>
 
           {/* Booking Code */}
-          <Card className="p-6 rounded-3xl shadow-lg mb-4 bg-linear-to-br from-orange-500 to-orange-600">
+          <Card className="p-6 rounded-3xl shadow-lg mb-4 bg-gradient-to-br from-orange-500 to-orange-600">
             <div className="text-center">
-              <p className="text-sm text-white/80 mb-2">Mã đặt bàn</p>
-              <p className="text-white mb-4">{bookingCode}</p>
-              <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm">
-                Đã xác nhận
-              </Badge>
+              <p className="text-sm text-white mb-2">Mã đặt bàn</p>
+
+              <p className="text-2xl font-bold tracking-widest text-white drop-shadow-lg mb-4">
+                {bookingCode}
+              </p>
+
+              <Badge className="bg-white/20 text-white border-white/30">Đã xác nhận</Badge>
             </div>
           </Card>
 
@@ -78,22 +70,22 @@ export function PaymentSuccessScreen({ paymentData }: PaymentSuccessScreenProps)
             <div className="space-y-3">
               <div className="flex justify-between items-center pb-3 border-b border-gray-100">
                 <span className="text-gray-600">Bàn số</span>
-                <span className="text-gray-900">{paymentData?.tableNumber}</span>
+                <span className="text-gray-900">{paymentData?.table_code ?? '-'}</span>
               </div>
 
               <div className="flex justify-between items-center pb-3 border-b border-gray-100">
-                <span className="text-gray-600">Sức chứa</span>
-                <span className="text-gray-900">{paymentData?.capacity} người</span>
+                <span className="text-gray-600">Số khách</span>
+                <span className="text-gray-900">{paymentData?.guests ?? '-'} người</span>
               </div>
 
               <div className="flex justify-between items-center pb-3 border-b border-gray-100">
                 <span className="text-gray-600">Ngày đặt</span>
-                <span className="text-gray-900">{currentDate}</span>
+                <span className="text-gray-900">{paymentData?.date ?? '-'}</span>
               </div>
 
               <div className="flex justify-between items-center pb-3 border-b border-gray-100">
                 <span className="text-gray-600">Giờ đặt</span>
-                <span className="text-gray-900">{currentTime}</span>
+                <span className="text-gray-900">{paymentData?.time ?? '-'}</span>
               </div>
 
               <div className="flex justify-between items-center pt-2">
@@ -108,7 +100,7 @@ export function PaymentSuccessScreen({ paymentData }: PaymentSuccessScreenProps)
               <div className="flex justify-between items-center">
                 <span className="text-gray-900">Đã thanh toán</span>
                 <span className="text-orange-600">
-                  {paymentData?.amount?.toLocaleString('vi-VN')}đ
+                  {Number(paymentData?.amount ?? 0).toLocaleString('vi-VN')}đ
                 </span>
               </div>
             </div>
@@ -132,12 +124,10 @@ export function PaymentSuccessScreen({ paymentData }: PaymentSuccessScreenProps)
             </button>
           </div>
 
-          {/* Info Card */}
           <Card className="mt-6 p-4 rounded-2xl bg-blue-50 border-blue-100">
             <p className="text-sm text-blue-900 mb-1">📱 Thông tin quan trọng</p>
             <p className="text-xs text-blue-700 mb-2">
-              Vui lòng lưu lại mã đặt bàn <span className="font-medium">{bookingCode}</span> để xuất
-              trình khi đến nhà hàng.
+              Vui lòng lưu lại mã đặt bàn <span className="font-medium">{bookingCode}</span>.
             </p>
             <p className="text-xs text-blue-700">
               Liên hệ: <span className="font-medium">1900 1234</span> nếu cần hỗ trợ.
@@ -145,6 +135,7 @@ export function PaymentSuccessScreen({ paymentData }: PaymentSuccessScreenProps)
           </Card>
         </motion.div>
       </div>
+
       <Footer />
     </div>
   );

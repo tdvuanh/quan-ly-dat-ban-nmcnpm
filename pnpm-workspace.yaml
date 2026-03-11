@@ -1,3 +1,9 @@
 packages:
-  - "booking-service-app-fe"
-  - "booking-service-be"
+  - booking-service-app-fe
+  - booking-service-be
+
+ignoredBuiltDependencies:
+  - '@prisma/client'
+  - '@prisma/engines'
+  - esbuild
+  - prisma

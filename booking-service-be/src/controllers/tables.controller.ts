@@ -4,10 +4,20 @@ import { Request, Response } from "express";
 class TableController {
   getTables = async (_req: Request, res: Response) => {
     try {
-      const tables = await prismaClient.tables.findMany();
-      return res.json(tables);
+      const tables = await prismaClient.tables.findMany({
+        orderBy: {
+          table_id: "asc",
+        },
+      });
+
+      const serialized = tables.map((t) => ({
+        ...t,
+        table_id: t.table_id.toString(),
+      }));
+
+      return res.json({ tables: serialized });
     } catch (error) {
-      console.error("Error creating table:", error);
+      console.error("Error fetching tables:", error);
       return res.status(500).json({ message: "Lỗi server" });
     }
   };
@@ -47,34 +57,40 @@ class TableController {
     }
   };
 
-  updateTableStatus = async (_req: Request, res: Response) => {
+  updateTableStatus = async (req: Request, res: Response) => {
     try {
-      const { tableId } = _req.params;
-      const { status } = _req.body;
+      const { tableId } = req.params;
+      const { status } = req.body;
 
-      const validStatuses = ["available", "serving", "booked"];
-      if (!validStatuses.includes(status)) {
+      const idNum = Number(tableId);
+      if (!tableId || Number.isNaN(idNum)) {
+        return res.status(400).json({ message: "tableId không hợp lệ" });
+      }
+
+      const validStatuses = ["available", "reserved", "occupied", "disabled"];
+      if (!status || typeof status !== "string" || !validStatuses.includes(status)) {
         return res.status(400).json({ message: "Trạng thái không hợp lệ" });
       }
 
       const updated = await prismaClient.tables.update({
-        where: { table_id: Number(tableId) },
-        data: { status },
+        where: { table_id: idNum },
+        data: { status: status as any }, // enum lowercase nên OK
       });
 
       return res.json({
         message: "Cập nhật trạng thái thành công",
-        data: {
-          ...updated,
-          table_id: updated.table_id.toString(),
-        },
+        data: { ...updated, table_id: updated.table_id.toString() },
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error update status:", error);
-      return res.status(500).json({ message: "Lỗi server" });
+
+      if (error?.code === "P2025") {
+        return res.status(404).json({ message: "Không tìm thấy bàn để cập nhật" });
+      }
+
+      return res.status(500).json({ message: "Lỗi server", detail: error?.message });
     }
   };
-
   deleteTable = async (req: Request, res: Response) => {
     try {
       const { tableId } = req.params;
@@ -87,8 +103,11 @@ class TableController {
         message: "Xoá bàn thành công",
         id: tableId,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting table:", error);
+      if (error?.code === "P2025") {
+        return res.status(404).json({ message: "Không tìm thấy bàn để xoá" });
+      }
       return res.status(500).json({ message: "Lỗi server" });
     }
   };
