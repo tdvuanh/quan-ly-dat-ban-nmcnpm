@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'motion/react';
+
 import {
   Calendar,
   Users,
@@ -13,6 +14,7 @@ import {
   Trash2,
   Phone,
   MessageSquare,
+  LogOut,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -45,12 +47,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { tables as initialTables, type Table, areas } from '../data/mockData';
+
+import type { Table } from '@/types/table';
 import { Footer } from '@/components/Footer';
 import { useNotification } from '@/context/NotificationContext';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import type { Screen } from '@/config';
+
 import { useNavigate } from 'react-router-dom';
 
 // Generate time slots từ 10:00 đến 22:00
@@ -65,17 +68,9 @@ const generateOperatingHours = () => {
   return hours;
 };
 
-// Mock data giờ đã đặt cho mỗi bàn
-const mockBookedHours: { [tableId: string]: string[] } = {
-  '1': ['12:00', '12:30', '13:00', '18:00', '18:30', '19:00'],
-  '2': ['11:00', '11:30', '19:00', '19:30', '20:00'],
-  '3': ['13:00', '13:30', '14:00', '20:00', '20:30'],
-  '4': ['10:00', '10:30', '17:00', '17:30', '18:00'],
-};
-
 export function AdminDashboard() {
   const navigate = useNavigate();
-  const [tables, setTables] = useState<Table[]>(initialTables);
+  const [tables, setTables] = useState<Table[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const { showSuccess, showInfo } = useNotification();
@@ -83,6 +78,7 @@ export function AdminDashboard() {
   // Booking Dialog State
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
   const [selectedBookingTable, setSelectedBookingTable] = useState<Table | null>(null);
+  const [bookedHours, setBookedHours] = useState<string[]>([]);
   const [bookingData, setBookingData] = useState({
     customerName: '',
     phoneNumber: '',
@@ -93,76 +89,94 @@ export function AdminDashboard() {
     guests: 2,
     notes: '',
   });
-
+  const [todayBookings, setTodayBookings] = useState<any[]>([]);
   // Available Hours Dialog State
   const [isAvailableHoursDialogOpen, setIsAvailableHoursDialogOpen] = useState(false);
   const [selectedTableForHours, setSelectedTableForHours] = useState<Table | null>(null);
-
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [newTable, setNewTable] = useState({
     code: '',
     capacity: 2,
-    area: 'floor1',
+
     status: 'available' as Table['status'],
   });
+  const isTableBookedToday = (tableId: number | string) => {
+    return todayBookings.some((b) => b.table_id == tableId);
+  };
 
+  const fetchBookedHours = async (tableId: string) => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+
+      const res = await fetch(
+        `http://localhost:3000/api/bookings/table/${tableId}/available-hours?date=${today}`
+      );
+
+      if (!res.ok) throw new Error('Failed to fetch hours');
+
+      const data = await res.json();
+
+      setBookedHours(data.booked_hours ?? []);
+    } catch (err) {
+      console.error(err);
+      setBookedHours([]);
+    }
+  };
+
+  const fetchTodayBookings = async () => {
+    const today = new Date().toISOString().split('T')[0];
+
+    const res = await fetch(`http://localhost:3000/api/bookings?date=${today}`);
+
+    const data = await res.json();
+
+    setTodayBookings(data.bookings || []);
+  };
+  const fetchTables = async () => {
+    try {
+      const res = await fetch('http://localhost:3000/api/tables');
+      const data = await res.json();
+
+      const mapped: Table[] = data.tables.map((t: any) => ({
+        table_id: String(t.table_id),
+        name: t.name,
+        capacity: t.capacity,
+        status: t.status,
+        area: 'floor1',
+      }));
+
+      setTables(mapped);
+    } catch (err) {
+      console.error('Fetch tables error:', err);
+    }
+  };
+  useEffect(() => {
+    fetchTables();
+  }, []);
+  useEffect(() => {
+    fetchTodayBookings();
+  }, []);
   const timeSlots = generateOperatingHours();
 
-  // Mock notifications
-  const notifications = [
-    {
-      id: 1,
-      type: 'new',
-      message: 'Bàn B03 vừa được đặt lúc 14:30',
-      time: '5 phút trước',
-      unread: true,
-    },
-    {
-      id: 2,
-      type: 'deposit',
-      message: 'Bàn V01 đã được cọc 500.000đ',
-      time: '10 phút trước',
-      unread: true,
-    },
-    {
-      id: 3,
-      type: 'cancel',
-      message: 'Đặt bàn B05 đã bị hủy',
-      time: '15 phút trước',
-      unread: true,
-    },
-    {
-      id: 4,
-      type: 'new',
-      message: 'Bàn T02 vừa được đặt lúc 19:00',
-      time: '30 phút trước',
-      unread: false,
-    },
-  ];
+  const totalTables = tables.length;
 
   const availableTables = tables.filter((t) => t.status === 'available').length;
-  const servingTables = tables.filter((t) => t.status === 'serving').length;
-  const bookedTables = tables.filter((t) => t.status === 'booked').length;
-  // const cleaningTables = tables.filter((t) => t.status === 'cleaning').length;
 
-  // Get today's date in Vietnamese format
-  // const getTodayDate = () => {
-  //   const today = new Date();
-  //   const day = today.getDate();
-  //   const month = today.getMonth() + 1;
-  //   const year = today.getFullYear();
-  //   return `${day}/${month}/${year}`;
-  // };
+  const servingTables = tables.filter((t) => t.status === 'occupied').length;
+
+  const bookedTables = tables.filter((t) => t.status === 'reserved').length;
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'available':
         return 'bg-green-100 text-green-700 border-green-200';
-      case 'booked':
+
+      case 'occupied':
         return 'bg-orange-100 text-orange-700 border-orange-200';
-      case 'serving':
-        return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'cleaning':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+
+      case 'disabled':
+        return 'bg-gray-100 text-gray-700 border-gray-200';
+
       default:
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
@@ -172,63 +186,76 @@ export function AdminDashboard() {
     switch (status) {
       case 'available':
         return 'Trống';
-      case 'booked':
+
+      case 'occupied':
+        return 'Bận';
+
+      case 'disabled':
+        return 'Dọn';
+
+      case 'reserved':
         return 'Đã đặt';
-      case 'serving':
-        return 'Phục vụ';
-      case 'cleaning':
-        return 'Đang dọn';
+
       default:
-        return status;
+        return 'Trống';
+    }
+  };
+  const handleChangeStatus = async (tableId: string, newStatus: string) => {
+    await updateTableStatus(tableId, newStatus);
+
+    fetchTables();
+  };
+
+  const handleAddTable = async () => {
+    if (!newTable.code.trim()) return;
+
+    try {
+      const res = await fetch('http://localhost:3000/api/tables', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tableName: newTable.code,
+          capacity: newTable.capacity,
+          status: 'available',
+        }),
+      });
+
+      if (!res.ok) throw new Error('Create table failed');
+
+      showSuccess('Thêm bàn thành công', `Bàn ${newTable.code} đã được thêm`);
+
+      setIsAddDialogOpen(false);
+
+      // reload tables từ server
+      fetchTables();
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  const handleChangeStatus = (tableId: string, newStatus: Table['status']) => {
-    const table = tables.find((t) => t.id === tableId);
-    setTables(tables.map((t) => (t.id === tableId ? { ...t, status: newStatus } : t)));
+  const handleDeleteTable = async (tableId: string) => {
+    try {
+      await fetch(`http://localhost:3000/api/tables/${tableId}`, {
+        method: 'DELETE',
+      });
 
-    showInfo(
-      'Cập nhật trạng thái bàn',
-      `Bàn ${table?.code} đã được chuyển sang trạng thái ${getStatusText(newStatus)}`
-    );
+      fetchTables();
+    } catch (err) {
+      console.error(err);
+    }
   };
-
-  const handleAddTable = () => {
-    if (!newTable.code.trim()) return;
-
-    const newId = `t${Date.now()}`;
-    const table: Table = {
-      id: newId,
-      code: newTable.code,
-      capacity: newTable.capacity,
-      area: newTable.area,
-      status: newTable.status,
-      x: 100,
-      y: 100,
-    };
-
-    setTables([...tables, table]);
-    showSuccess('Thêm bàn thành công', `Bàn ${newTable.code} đã được thêm vào hệ thống`);
-    setNewTable({ code: '', capacity: 2, area: 'floor1', status: 'available' });
-    setIsAddDialogOpen(false);
-  };
-
-  const handleDeleteTable = (tableId: string) => {
-    const table = tables.find((t) => t.id === tableId);
-    setTables(tables.filter((t) => t.id !== tableId));
-    showSuccess('Xóa bàn thành công', `Bàn ${table?.code} đã được xóa khỏi hệ thống`);
-  };
-
   const handleToggleCleaningAvailable = (tableId: string, currentStatus: Table['status']) => {
     let newStatus: Table['status'];
 
-    if (currentStatus === 'cleaning') {
+    if (currentStatus === 'disabled') {
       newStatus = 'available';
     } else if (currentStatus === 'available') {
-      newStatus = 'cleaning';
+      newStatus = 'disabled';
     } else {
       // If current status is serving or booked, set to cleaning
-      newStatus = 'cleaning';
+      newStatus = 'disabled';
     }
 
     handleChangeStatus(tableId, newStatus);
@@ -248,92 +275,194 @@ export function AdminDashboard() {
     });
     setIsBookingDialogOpen(true);
   };
+  const fetchNotifications = async () => {
+    try {
+      const res = await fetch('http://localhost:3000/api/bookings/notifications/all');
 
-  const handleConfirmBooking = () => {
-    if (!bookingData.customerName || !bookingData.phoneNumber || !bookingData.time) {
-      showInfo('Thông tin chưa đầy đủ', 'Vui lòng điền đầy đủ thông tin khách hàng và thời gian');
-      return;
+      const data = await res.json();
+
+      setNotifications(data.notifications || []);
+    } catch (err) {
+      console.error('Fetch notifications error:', err);
     }
+  };
+  useEffect(() => {
+    fetchNotifications();
 
-    // Validate số lượng khách không vượt quá sức chứa
-    if (selectedBookingTable && bookingData.guests > selectedBookingTable.capacity) {
-      showInfo(
-        'Vượt quá sức chứa',
-        `Bàn ${selectedBookingTable.code} chỉ chứa tối đa ${selectedBookingTable.capacity} người`
-      );
-      return;
+    const interval = setInterval(() => {
+      fetchNotifications();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+  useEffect(() => {
+    fetchTodayBookings();
+  }, []);
+  const handleConfirmBooking = async () => {
+    if (!selectedBookingTable) return;
+
+    try {
+      const bookingDateTime = `${bookingData.date.toISOString().split('T')[0]}T${bookingData.time}:00`;
+
+      const res = await fetch('http://localhost:3000/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          table_id: Number(selectedBookingTable.table_id),
+          table_code: selectedBookingTable.name,
+          area: 'floor1',
+          guests: bookingData.guests,
+          date: bookingData.date.toISOString().split('T')[0],
+          time: bookingData.time,
+          duration: bookingData.duration,
+          deposit_amount: 0,
+          payment_method: 'cash',
+          customer_name: bookingData.customerName,
+          phone: bookingData.phoneNumber,
+          notes: bookingData.notes,
+        }),
+      });
+
+      if (!res.ok) throw new Error('Create booking failed');
+
+      showSuccess('Đặt bàn thành công', `Bàn ${selectedBookingTable.name} đã được đặt`);
+
+      fetchBookedHours(selectedBookingTable.table_id);
+      fetchTodayBookings();
+
+      setIsBookingDialogOpen(false);
+    } catch (err) {
+      console.error(err);
     }
-
-    // Update table status to booked
-    setTables(
-      tables.map((t) =>
-        t.id === selectedBookingTable?.id ? { ...t, status: 'booked' as Table['status'] } : t
-      )
-    );
-
-    showSuccess(
-      'Đặt bàn thành công',
-      `Bàn ${selectedBookingTable?.code} đã được đặt cho ${bookingData.customerName}`
-    );
-
-    setIsBookingDialogOpen(false);
-    setSelectedBookingTable(null);
   };
+  // const getAreaName = (areaId: string) => {
+  //   return areas.find((a) => a.id === areaId)?.name || areaId;
+  // };
+  const handleServeTable = async (table: Table) => {
+    try {
+      const now = new Date();
 
-  const getAreaName = (areaId: string) => {
-    return areas.find((a) => a.id === areaId)?.name || areaId;
+      const date = now.toISOString().split('T')[0];
+
+      const minutes = now.getMinutes();
+      const roundedMinutes = minutes < 30 ? '00' : '30';
+
+      const time = `${now.getHours().toString().padStart(2, '0')}:${roundedMinutes}`;
+
+      // tạo booking tạm
+      await fetch('http://localhost:3000/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          table_id: Number(table.table_id),
+          table_code: table.name,
+          area: 'floor1',
+          guests: table.capacity,
+          date,
+          time,
+          duration: 1,
+          deposit_amount: 0,
+          payment_method: 'cash',
+        }),
+      });
+
+      // đổi trạng thái bàn
+      await updateTableStatus(table.table_id, 'occupied');
+
+      fetchTables();
+      fetchBookedHours(table.table_id);
+    } catch (err) {
+      console.error(err);
+    }
   };
+  const handleFinishTable = async (tableId: string) => {
+    try {
+      await fetch(`http://localhost:3000/api/bookings/table/${tableId}/finish`, {
+        method: 'PATCH',
+      });
 
+      await updateTableStatus(tableId, 'available');
+
+      fetchTables();
+      fetchBookedHours(tableId);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+  const updateTableStatus = async (tableId: string, status: string) => {
+    await fetch(`http://localhost:3000/api/tables/${tableId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status }),
+    });
+  };
   return (
-    <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-orange-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
-      <div className="bg-linear-to-r from-orange-500 to-orange-600 text-white px-6 py-6 shadow-lg">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-              <span className="text-2xl">👨‍💼</span>
+      <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-5 shadow-lg">
+        <div className="flex items-center justify-between">
+          {/* Left */}
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 bg-white/20 rounded-xl flex items-center justify-center text-xl">
+              👨‍💼
             </div>
-            <div className="ml-3">
-              <h2 className="text-white">Admin Dashboard</h2>
+
+            <div>
+              <h1 className="text-lg font-semibold">Admin Dashboard</h1>
               <p className="text-xs text-white/80">Quản lý nhà hàng</p>
             </div>
           </div>
-          <div className="flex gap-2">
+
+          {/* Right */}
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors relative"
+              className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-white/20 hover:bg-white/30 transition"
             >
               <Bell className="w-5 h-5 text-white" />
-              {notifications.filter((n) => n.unread).length > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+
+              {notifications.length > 0 && (
+                <span className="absolute -top-1 -right-1 text-xs bg-red-500 text-white rounded-full px-1.5">
+                  {notifications.length}
+                </span>
               )}
             </button>
+
             <button
               onClick={() => navigate('/login')}
-              className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors"
+              className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center hover:bg-orange-200 transition-colors"
             >
-              <User className="w-5 h-5 text-white" />
+              <LogOut className="w-5 h-5 text-orange-600" />
             </button>
           </div>
         </div>
 
-        {/* Stats Summary */}
-        <div className="grid grid-cols-4 gap-3">
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center">
-            <p className="text-2xl text-white mb-1">{tables.length}</p>
-            <p className="text-xs text-white/80">Tổng bàn</p>
+        {/* Stats */}
+        <div className="grid grid-cols-4 gap-4 mt-4">
+          <div className="bg-white rounded-xl shadow-md p-4 text-center">
+            <p className="text-2xl font-bold text-orange-600">{totalTables}</p>
+            <p className="text-xs text-gray-500">Tổng bàn</p>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center">
-            <p className="text-2xl text-white mb-1">{availableTables}</p>
-            <p className="text-xs text-white/80">Trống</p>
+
+          <div className="bg-white rounded-xl shadow-md p-4 text-center">
+            <p className="text-2xl font-bold text-green-600">{availableTables}</p>
+            <p className="text-xs text-gray-500">Trống</p>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center">
-            <p className="text-2xl text-white mb-1">{servingTables}</p>
-            <p className="text-xs text-white/80">Phục vụ</p>
+
+          <div className="bg-white rounded-xl shadow-md p-4 text-center">
+            <p className="text-2xl font-bold text-blue-600">{servingTables}</p>
+            <p className="text-xs text-gray-500">Phục vụ</p>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center">
-            <p className="text-2xl text-white mb-1">{bookedTables}</p>
-            <p className="text-xs text-white/80">Đã đặt</p>
+
+          <div className="bg-white rounded-xl shadow-md p-4 text-center">
+            <p className="text-2xl font-bold text-orange-500">{bookedTables}</p>
+            <p className="text-xs text-gray-500">Đã đặt</p>
           </div>
         </div>
       </div>
@@ -385,25 +514,6 @@ export function AdminDashboard() {
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="area">Khu vực</Label>
-                  <Select
-                    value={newTable.area}
-                    onValueChange={(value) => setNewTable({ ...newTable, area: value })}
-                  >
-                    <SelectTrigger className="h-12 rounded-2xl">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {areas.map((area) => (
-                        <SelectItem key={area.id} value={area.id}>
-                          {area.icon} {area.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
               <div className="flex gap-3">
                 <Button
@@ -431,7 +541,7 @@ export function AdminDashboard() {
           <div className="grid grid-cols-2 gap-2">
             {tables.map((table, index) => (
               <motion.div
-                key={table.id}
+                key={table.table_id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.03 }}
@@ -441,8 +551,7 @@ export function AdminDashboard() {
                   <div className="flex items-start justify-between">
                     <div className="flex flex-col gap-2">
                       <div>
-                        <p className="text-gray-900">{table.code}</p>
-                        <p className="text-xs text-gray-500">{getAreaName(table.area)}</p>
+                        <p className="text-gray-900">{table.name}</p>
                       </div>
                       <div className="flex items-baseline gap-1 text-sm text-gray-600">
                         <Users className="w-4 h-4" />
@@ -450,8 +559,7 @@ export function AdminDashboard() {
                       </div>
                     </div>
                     <Badge
-                      variant="outline"
-                      className={`text-xs rounded-full px-2 py-1 ${getStatusColor(table.status)}`}
+                      className={`text-xs rounded-full px-2 py-1 border ${getStatusColor(table.status)}`}
                     >
                       {getStatusText(table.status)}
                     </Badge>
@@ -459,23 +567,14 @@ export function AdminDashboard() {
 
                   {/* Footer: Status Change Buttons */}
                   <div className="flex flex-col gap-2">
-                    {/* Đặt Bàn Button - Highlighted */}
-                    <Button
-                      size="sm"
-                      className="w-full text-sm uppercase rounded-xl bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-md tracking-wide h-9"
-                      onClick={() => handleOpenBooking(table)}
-                    >
-                      Đặt Bàn
-                    </Button>
-
                     {/* Status Buttons Row: Phục vụ, Xem giờ trống, Đang dọn */}
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-4 gap-2">
                       <Button
                         size="sm"
-                        variant={table.status === 'serving' ? 'default' : 'outline'}
-                        onClick={() => handleChangeStatus(table.id, 'serving')}
-                        disabled={table.status === 'serving'}
-                        className={`text-xs rounded-xl h-8 ${table.status === 'serving' ? 'bg-blue-100 text-blue-700 border-blue-200 cursor-default' : ''}`}
+                        variant={table.status === 'occupied' ? 'default' : 'outline'}
+                        onClick={() => handleServeTable(table)}
+                        disabled={table.status === 'occupied'}
+                        className={`text-xs rounded-xl h-8 ${table.status === 'occupied' ? 'bg-blue-100 text-blue-700 border-blue-200 cursor-default' : ''}`}
                       >
                         Phục vụ
                       </Button>
@@ -483,7 +582,9 @@ export function AdminDashboard() {
                         size="sm"
                         variant="outline"
                         onClick={() => {
+                          setBookedHours([]);
                           setSelectedTableForHours(table);
+                          fetchBookedHours(table.table_id);
                           setIsAvailableHoursDialogOpen(true);
                         }}
                         className="text-xs rounded-xl h-8 border-green-200 text-green-700 hover:bg-green-50"
@@ -493,24 +594,33 @@ export function AdminDashboard() {
                       <Button
                         size="sm"
                         variant={
-                          table.status === 'cleaning' || table.status === 'available'
+                          table.status === 'disabled' || table.status === 'available'
                             ? 'default'
                             : 'outline'
                         }
-                        onClick={() => handleToggleCleaningAvailable(table.id, table.status)}
+                        onClick={() => handleToggleCleaningAvailable(table.table_id, table.status)}
                         className={`text-xs rounded-xl h-8 ${
-                          table.status === 'cleaning'
+                          table.status === 'disabled'
                             ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
                             : table.status === 'available'
                               ? 'bg-green-100 text-green-700 border-green-200'
                               : ''
                         }`}
                       >
-                        {table.status === 'cleaning'
+                        {table.status === 'disabled'
                           ? 'Đặt trống'
                           : table.status === 'available'
                             ? 'Đang dọn'
                             : 'Đang dọn'}
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleFinishTable(table.table_id)}
+                        className="text-xs rounded-xl h-8 border-green-200 text-green-700 hover:bg-green-50"
+                      >
+                        Hoàn thành
                       </Button>
                     </div>
 
@@ -530,13 +640,13 @@ export function AdminDashboard() {
                         <AlertDialogHeader>
                           <AlertDialogTitle>Xác nhận xóa bàn</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Bạn có chắc muốn xóa bàn {table.code}? Hành động này không thể hoàn tác.
+                            Bạn có chắc muốn xóa bàn {table.name}? Hành động này không thể hoàn tác.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel className="rounded-2xl">Hủy</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() => handleDeleteTable(table.id)}
+                            onClick={() => handleDeleteTable(table.table_id)}
                             className="rounded-2xl bg-red-600 hover:bg-red-700"
                           >
                             Xóa bàn
@@ -555,48 +665,50 @@ export function AdminDashboard() {
       {/* Notification Panel */}
       {showNotifications && (
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="fixed top-20 right-6 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50"
+          initial={{ opacity: 0, y: -10, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -10 }}
+          className="absolute top-16 right-6 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50"
         >
-          <div className="bg-linear-to-r from-orange-500 to-orange-600 text-white px-4 py-3 flex items-center justify-between">
-            <h3 className="text-white">Thông báo</h3>
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
+            <p className="text-sm font-semibold text-gray-900">Thông báo</p>
+
             <button
               onClick={() => setShowNotifications(false)}
-              className="text-white hover:bg-white/20 rounded-full p-1"
+              className="text-gray-400 hover:text-gray-600 text-sm"
             >
-              ✕
+              Đóng
             </button>
           </div>
-          <div className="max-h-96 overflow-y-auto">
+
+          {/* List */}
+          <div className="max-h-80 overflow-y-auto">
             {notifications.map((notif) => (
               <div
                 key={notif.id}
-                className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
-                  notif.unread ? 'bg-orange-50/50' : ''
-                }`}
+                className="flex gap-3 px-4 py-3 hover:bg-gray-50 transition border-b last:border-none"
               >
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`w-2 h-2 rounded-full mt-2 shrink-0 ${
-                      notif.type === 'new'
-                        ? 'bg-green-500'
-                        : notif.type === 'deposit'
-                          ? 'bg-blue-500'
-                          : 'bg-red-500'
-                    }`}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900 mb-1">{notif.message}</p>
-                    <p className="text-xs text-gray-500">{notif.time}</p>
-                  </div>
+                {/* Dot */}
+                <div className="w-2 h-2 mt-2 rounded-full bg-green-500" />
+
+                {/* Text */}
+                <div className="flex-1">
+                  <p className="text-sm text-gray-800 leading-snug">{notif.content}</p>
+
+                  <p className="text-xs text-gray-400 mt-1">
+                    {new Date(notif.created_at).toLocaleTimeString()}
+                  </p>
                 </div>
               </div>
             ))}
           </div>
-          <div className="px-4 py-3 bg-gray-50 text-center">
-            <button className="text-sm text-orange-600 hover:text-orange-700">Xem tất cả</button>
+
+          {/* Footer */}
+          <div className="text-center py-3 bg-gray-50">
+            <button className="text-sm text-orange-600 hover:text-orange-700 font-medium">
+              Xem tất cả
+            </button>
           </div>
         </motion.div>
       )}
@@ -605,7 +717,7 @@ export function AdminDashboard() {
       <Dialog open={isBookingDialogOpen} onOpenChange={setIsBookingDialogOpen}>
         <DialogContent className="rounded-3xl max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Đặt bàn cho {selectedBookingTable?.code}</DialogTitle>
+            <DialogTitle>Đặt bàn cho {selectedBookingTable?.name}</DialogTitle>
             <DialogDescription>Điền thông tin khách hàng và thời gian đặt bàn</DialogDescription>
           </DialogHeader>
 
@@ -820,14 +932,13 @@ export function AdminDashboard() {
       <Dialog open={isAvailableHoursDialogOpen} onOpenChange={setIsAvailableHoursDialogOpen}>
         <DialogContent className="rounded-3xl max-w-md">
           <DialogHeader>
-            <DialogTitle>Giờ trống - Bàn {selectedTableForHours?.code}</DialogTitle>
+            <DialogTitle>Giờ trống - Bàn {selectedTableForHours?.name}</DialogTitle>
             <DialogDescription>Thời gian hoạt động: 10:00 - 22:00</DialogDescription>
           </DialogHeader>
 
           <div className="py-4">
             <div className="grid grid-cols-4 gap-2">
               {timeSlots.map((hour) => {
-                const bookedHours = mockBookedHours[selectedTableForHours?.id || ''] || [];
                 const isBooked = bookedHours.includes(hour);
 
                 return (
@@ -837,12 +948,27 @@ export function AdminDashboard() {
                     animate={{ opacity: 1, scale: 1 }}
                     whileHover={!isBooked ? { scale: 1.05 } : {}}
                     onClick={() => {
-                      if (!isBooked) {
-                        showSuccess(
-                          'Đã chọn giờ',
-                          `Giờ ${hour} đã được chọn cho bàn ${selectedTableForHours?.code}`
-                        );
+                      if (!isBooked && selectedTableForHours) {
+                        // set bàn được chọn
+                        setSelectedBookingTable(selectedTableForHours);
+
+                        // set dữ liệu booking
+                        setBookingData({
+                          customerName: '',
+                          phoneNumber: '',
+                          phoneValidationError: '',
+                          date: new Date(),
+                          time: hour, // ⭐ giờ vừa click
+                          duration: 1,
+                          guests: Math.min(2, selectedTableForHours.capacity),
+                          notes: '',
+                        });
+
+                        // đóng dialog giờ
                         setIsAvailableHoursDialogOpen(false);
+
+                        // mở dialog đặt bàn
+                        setIsBookingDialogOpen(true);
                       }
                     }}
                     disabled={isBooked}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,22 +16,40 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { motion } from 'motion/react';
 import { ArrowLeft, Users, Calendar, Clock, MessageSquare, User, Phone } from 'lucide-react';
-import { tables, areas, generateTimeSlots } from '@/data/mockData';
-import { format } from 'date-fns';
+import { areas, generateTimeSlots } from '@/data/mockData';
+import { format, set } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Footer } from '@/components/Footer';
 import { useNotification } from '@/context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
 
+type TableStatus = 'available' | 'reserved' | 'occupied' | 'disabled';
+
+type Table = {
+  table_id: number;
+  name: string;
+  area: string | null;
+  capacity: number;
+  status: TableStatus;
+};
 interface BookingScreenProps {
-  initialData?: { tableId?: string };
+  initialData?: { tableId?: number };
 }
 
+const getCurrentTime = () => {
+  const now = new Date();
+  const h = now.getHours().toString().padStart(2, '0');
+  const m = now.getMinutes() < 30 ? '00' : '30';
+  return `${h}:${m}`;
+};
+
 export function BookingScreen({ initialData }: BookingScreenProps) {
+  const [tables, setTables] = useState<Table[]>([]);
+  const [loadingTables, setLoadingTables] = useState(true);
   const navigate = useNavigate();
-  const [selectedTableId, setSelectedTableId] = useState(initialData?.tableId || '');
+  const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
   const [date, setDate] = useState<Date>(new Date());
-  const [selectedTime, setSelectedTime] = useState('');
+  const [selectedTime, setSelectedTime] = useState(getCurrentTime());
   const [duration, setDuration] = useState(1); // Default 1 hour
   const [guests, setGuests] = useState(2);
   const [notes, setNotes] = useState('');
@@ -43,57 +61,94 @@ export function BookingScreen({ initialData }: BookingScreenProps) {
 
   const { showInfo } = useNotification();
 
-  const availableTables = tables.filter((t) => t.status === 'available');
-  const selectedTable = tables.find((t) => t.id === selectedTableId);
+  const availableTables = tables;
+  const selectedTable = tables.find((t) => t.table_id === selectedTableId);
   const timeSlots = generateTimeSlots();
 
-  // Update guests when table is selected
-  const handleTableSelect = (tableId: string) => {
-    setSelectedTableId(tableId);
-    const table = tables.find((t) => t.id === tableId);
-    if (table) {
-      // Set guests to default 2 or table capacity, whichever is smaller
-      setGuests(Math.min(2, table.capacity));
+  const fetchAvailableTables = async () => {
+    try {
+      setLoadingTables(true);
+
+      const formattedDate = format(date, 'yyyy-MM-dd');
+
+      const res = await fetch(
+        `http://localhost:3000/api/bookings/tables/available?date=${formattedDate}&time=${selectedTime}`
+      );
+
+      const data = await res.json();
+
+      setTables(data.tables || []);
+    } catch (err) {
+      console.error('Fetch tables error:', err);
+    } finally {
+      setLoadingTables(false);
     }
   };
+  useEffect(() => {
+    setSelectedTableId(null);
+    fetchAvailableTables();
+  }, [date, selectedTime]);
 
-  const handleConfirm = () => {
-    if (!selectedTableId || !date || !selectedTime) {
-      showInfo('Thông tin chưa đầy đủ', 'Vui lòng điền đầy đủ thông tin và chọn bàn');
-      return;
-    }
+  // Update guests when table is selected
+  const handleTableSelect = (tableId: number) => {
+    setSelectedTableId(tableId);
+    const table = tables.find((t) => t.table_id === tableId);
+    if (table) setGuests(Math.min(2, table.capacity));
+  };
 
+  const handleConfirm = async () => {
     if (!customerName || !phoneNumber) {
-      showInfo('Thông tin chưa đầy đủ', 'Vui lòng điền họ tên và số điện thoại');
+      showInfo('Thiếu thông tin', 'Vui lòng nhập tên và số điện thoại');
       return;
     }
 
-    // Validate số lượng khách không vượt quá sức chứa
-    if (selectedTable && guests > selectedTable.capacity) {
-      showInfo(
-        'Vượt quá sức chứa',
-        `Bàn ${selectedTable.code} chỉ chứa tối đa ${selectedTable.capacity} người`
-      );
+    if (!selectedTableId || !date || !selectedTime) {
+      showInfo('Thiếu thông tin', 'Vui lòng chọn bàn và thời gian');
       return;
     }
 
-    const areaName =
-      areas.find((a) => a.id === selectedTable?.area)?.name || selectedTable?.area || '';
+    const selectedTable = tables.find((t) => t.table_id === selectedTableId);
+    if (!selectedTable) return;
 
-    const bookingData = {
-      tableId: selectedTableId,
-      tableCode: selectedTable?.code,
-      capacity: selectedTable?.capacity,
-      area: areaName,
-      date: format(date, 'dd/MM/yyyy', { locale: vi }),
-      time: selectedTime,
-      duration,
-      guests,
-      notes,
-      customerName,
-      phoneNumber,
-    };
-    navigate('/confirmation', { state: { ...bookingData } });
+    try {
+      await fetch('http://localhost:3000/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: null,
+          table_id: Number(selectedTableId),
+          table_code: selectedTable.name,
+          area: selectedTable.area,
+          guests,
+          date: format(date, 'yyyy-MM-dd'),
+          time: selectedTime,
+          duration,
+          deposit_amount: 0,
+          payment_method: 'wallet',
+          customer_name: customerName,
+          phone: phoneNumber,
+          notes,
+        }),
+      });
+
+      navigate('/confirmation', {
+        state: {
+          tableCode: selectedTable.name,
+          tableId: selectedTable.table_id,
+          guests,
+          date: format(date, 'yyyy-MM-dd'),
+          time: selectedTime,
+          duration,
+          capacity: selectedTable.capacity,
+          area: selectedTable.area,
+        },
+      });
+    } catch (err) {
+      console.error(err);
+      showInfo('Lỗi server', 'Không thể đặt bàn');
+    }
   };
 
   return (
@@ -270,7 +325,13 @@ export function BookingScreen({ initialData }: BookingScreenProps) {
                     <Clock className="w-4 h-4 text-orange-500" />
                     Giờ đặt (9:00 - 21:00) <p className="text-red-500">*</p>
                   </Label>
-                  <Select value={selectedTime} onValueChange={setSelectedTime}>
+                  <Select
+                    value={selectedTime}
+                    onValueChange={(value) => {
+                      console.log('selectedTime:', value);
+                      setSelectedTime(value);
+                    }}
+                  >
                     <SelectTrigger className="h-12 rounded-2xl border-gray-200">
                       <SelectValue placeholder="Chọn giờ" />
                     </SelectTrigger>
@@ -340,28 +401,28 @@ export function BookingScreen({ initialData }: BookingScreenProps) {
             ) : (
               <div className="grid grid-cols-2 gap-3">
                 {availableTables.map((table, index) => {
-                  const areaName = areas.find((a) => a.id === table.area)?.name || table.area;
+                  const areaName = areas.find((a) => a.id === table.area)?.name || table.area || '';
                   return (
                     <motion.div
-                      key={table.id}
+                      key={table.table_id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                     >
                       <Card
-                        onClick={() => handleTableSelect(table.id)}
+                        onClick={() => handleTableSelect(table.table_id)}
                         className={`p-4 rounded-2xl cursor-pointer transition-all border-2 ${
-                          selectedTableId === table.id
+                          selectedTableId === table.table_id
                             ? 'border-orange-500 bg-orange-50 shadow-md'
                             : 'border-gray-200 bg-white hover:border-orange-300'
                         }`}
                       >
                         <div className="flex items-center justify-between mb-3">
                           <div>
-                            <p className="text-gray-900">{table.code}</p>
+                            <p className="text-gray-900">{table.name}</p>
                             <p className="text-xs text-gray-500">{areaName}</p>
                           </div>
-                          {selectedTableId === table.id && (
+                          {selectedTableId === table.table_id && (
                             <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center">
                               <svg
                                 className="w-4 h-4 text-white"
@@ -393,7 +454,7 @@ export function BookingScreen({ initialData }: BookingScreenProps) {
 
           <Button
             onClick={handleConfirm}
-            disabled={!selectedTableId || !date || !selectedTime}
+            disabled={!selectedTableId || !date || !selectedTime || !customerName || !phoneNumber}
             className="w-full h-12 bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Xác nhận đặt bàn

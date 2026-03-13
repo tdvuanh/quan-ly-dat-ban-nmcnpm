@@ -5,10 +5,11 @@ import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle, Gift, Clock, Info, Bell, Trash2, Check } from 'lucide-react';
+import { is } from 'date-fns/locale';
 
 interface Notification {
   id: string;
-  type: 'booking' | 'promotion' | 'reminder' | 'info';
+  type: 'booking' | 'promotion' | 'reminder' | 'info' | 'payment';
   title: string;
   message: string;
   time: string;
@@ -18,65 +19,91 @@ interface Notification {
 interface NotificationPopupProps {
   isOpen: boolean;
   onClose: () => void;
-  anchorRef: React.RefObject<HTMLButtonElement>;
+  anchorRef: React.RefObject<HTMLButtonElement | null>;
 }
 
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'booking',
-    title: 'Đặt bàn thành công',
-    message: 'Bàn số 5 đã được xác nhận cho ngày 15/11/2025 lúc 19:00',
-    time: '5 phút trước',
-    isNew: true,
-  },
-  {
-    id: '2',
-    type: 'promotion',
-    title: 'Ưu đãi đặc biệt 🎉',
-    message: 'Giảm 20% cho đơn hàng từ 500.000đ. Áp dụng từ 14/11 - 20/11',
-    time: '2 giờ trước',
-    isNew: true,
-  },
-  {
-    id: '3',
-    type: 'reminder',
-    title: 'Nhắc nhở đặt bàn',
-    message: 'Bạn có lịch đặt bàn vào ngày mai lúc 19:00',
-    time: '1 ngày trước',
-    isNew: false,
-  },
-  {
-    id: '4',
-    type: 'info',
-    title: 'Cập nhật thực đơn',
-    message: 'Nhà hàng vừa bổ sung 10 món ăn mới',
-    time: '2 ngày trước',
-    isNew: false,
-  },
-  {
-    id: '5',
-    type: 'booking',
-    title: 'Hoàn thành đặt bàn',
-    message: 'Cảm ơn bạn đã sử dụng dịch vụ',
-    time: '3 ngày trước',
-    isNew: false,
-  },
-];
+// const mockNotifications: Notification[] = [
+//   {
+//     id: '1',
+//     type: 'booking',
+//     title: 'Đặt bàn thành công',
+//     message: 'Bàn số 5 đã được xác nhận cho ngày 15/11/2025 lúc 19:00',
+//     time: '5 phút trước',
+//     isNew: true,
+//   },
+//   {
+//     id: '2',
+//     type: 'promotion',
+//     title: 'Ưu đãi đặc biệt 🎉',
+//     message: 'Giảm 20% cho đơn hàng từ 500.000đ. Áp dụng từ 14/11 - 20/11',
+//     time: '2 giờ trước',
+//     isNew: true,
+//   },
+//   {
+//     id: '3',
+//     type: 'reminder',
+//     title: 'Nhắc nhở đặt bàn',
+//     message: 'Bạn có lịch đặt bàn vào ngày mai lúc 19:00',
+//     time: '1 ngày trước',
+//     isNew: false,
+//   },
+//   {
+//     id: '4',
+//     type: 'info',
+//     title: 'Cập nhật thực đơn',
+//     message: 'Nhà hàng vừa bổ sung 10 món ăn mới',
+//     time: '2 ngày trước',
+//     isNew: false,
+//   },
+//   {
+//     id: '5',
+//     type: 'booking',
+//     title: 'Hoàn thành đặt bàn',
+//     message: 'Cảm ơn bạn đã sử dụng dịch vụ',
+//     time: '3 ngày trước',
+//     isNew: false,
+//   },
+// ];
 
 export function NotificationPopup({ isOpen, onClose, anchorRef }: NotificationPopupProps) {
   const popupRef = useRef<HTMLDivElement>(null);
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const newCount = notifications.filter((n) => n.isNew).length;
+  useEffect(() => {
+    if (!isOpen) return;
+    const fetchNotifications = async () => {
+      try {
+        const res = await fetch('http://localhost:3000/api/notifications');
 
+        const data = await res.json();
+
+        const formatted = data.notifications.map((n: any) => ({
+          id: String(n.notification_id),
+          type: n.type ?? 'info',
+          title: n.title,
+          message: n.content,
+          time: 'Vừa xong',
+          isNew: !n.is_read,
+        }));
+
+        setNotifications(formatted);
+      } catch (err) {
+        console.error('Fetch notifications error:', err);
+      }
+    };
+
+    fetchNotifications();
+  }, [isOpen]);
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      const anchorEl = anchorRef.current;
+
       if (
         popupRef.current &&
-        !popupRef.current.contains(event.target as Node) &&
-        anchorRef.current &&
-        !anchorRef.current.contains(event.target as Node)
+        !popupRef.current.contains(target) &&
+        (!anchorEl || !anchorEl.contains(target))
       ) {
         onClose();
       }
@@ -98,6 +125,8 @@ export function NotificationPopup({ isOpen, onClose, anchorRef }: NotificationPo
         return <Clock className="w-5 h-5 text-blue-600" />;
       case 'info':
         return <Info className="w-5 h-5 text-purple-600" />;
+      case 'payment':
+        return <CheckCircle className="w-5 h-5 text-emerald-600" />;
       default:
         return <Bell className="w-5 h-5 text-gray-600" />;
     }
@@ -113,6 +142,8 @@ export function NotificationPopup({ isOpen, onClose, anchorRef }: NotificationPo
         return 'bg-blue-100';
       case 'info':
         return 'bg-purple-100';
+      case 'payment':
+        return 'bg-emerald-100';
       default:
         return 'bg-gray-100';
     }

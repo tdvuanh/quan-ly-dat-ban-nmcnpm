@@ -1,14 +1,11 @@
 import { Router } from "express";
 import { TableController } from "../controllers/index";
 
-const router = Router();
+const tableRouter = Router();
 
-router.get("/", TableController.getTables);
+tableRouter.get("/", TableController.getTables);
+tableRouter.post("/", TableController.createTables);
+tableRouter.patch("/:tableId", TableController.updateTableStatus);
+tableRouter.delete("/:tableId", TableController.deleteTable);
 
-router.post("/", TableController.createTables);
-
-router.patch("/:tableId", TableController.updateTableStatus);
-
-router.delete("/:tableId", TableController.deleteTable);
-
-export default router;
+export default tableRouter;

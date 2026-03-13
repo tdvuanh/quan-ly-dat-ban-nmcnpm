@@ -1,48 +1,178 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 import { motion } from 'motion/react';
-import { ArrowLeft, QrCode, CheckCircle2, Calendar, Users, MapPin, Clock } from 'lucide-react';
-import { useNotification } from '@/context/NotificationContext';
+import {
+  ArrowLeft,
+  QrCode,
+  CheckCircle2,
+  Calendar,
+  Users,
+  MapPin,
+  Clock,
+  Wallet,
+} from 'lucide-react';
+
 import { Footer } from '@/components/Footer';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { mockUser } from '@/data/mockData';
 
 interface PaymentScreenProps {
   bookingData?: any;
 }
+type WalletInfo = {
+  wallet_id: number | string;
+  user_id: string;
+  balance: number;
+};
 
-export function PaymentScreen({ bookingData }: PaymentScreenProps) {
+export function PaymentScreen(props: PaymentScreenProps) {
   const navigate = useNavigate();
-  const [paymentMethod, setPaymentMethod] = useState('banking');
+  const location = useLocation();
+
+  const [paymentMethod, setPaymentMethod] = useState<'banking' | 'wallet'>('banking');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const { showSuccess } = useNotification();
+
+  const bookingData = (location.state as any) ?? props.bookingData;
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+
+  const [wallet, setWallet] = useState<WalletInfo | null>(null);
+  const [walletLoading, setWalletLoading] = useState(false);
+  const [walletError, setWalletError] = useState<string | null>(null);
 
   const depositAmount = 50000; // 50k VND deposit
 
-  const handlePayment = () => {
-    setIsProcessing(true);
-    setPaymentMethod('banking');
-    // Simulate payment processing
-    setTimeout(() => {
-      setIsProcessing(false);
-      setIsSuccess(true);
-      showSuccess('Đặt bàn thành công!', `Bàn ${bookingData?.tableCode} đã được đặt`);
+  const hasEnoughBalance = paymentMethod !== 'wallet' || (wallet?.balance ?? 0) >= depositAmount;
+  const fetchWallet = async () => {
+    try {
+      setWalletLoading(true);
+      setWalletError(null);
 
-      // Navigate to success screen after 1.5s
+      // TODO: thay mockUser.user_id bằng user id thật của bạn
+      const userId = bookingData?.user_id ?? mockUser.user_id;
+
+      const res = await fetch(`http://localhost:3000/api/wallet/${userId}`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setWallet(null);
+        setWalletError(data?.message ?? 'Không lấy được ví');
+        return;
+      }
+
+      const w = data.wallet;
+      setWallet({
+        wallet_id: w.wallet_id,
+        user_id: w.user_id,
+        balance: typeof w.balance === 'string' ? Number(w.balance) : w.balance,
+      });
+    } catch (e) {
+      setWallet(null);
+      setWalletError('Lỗi kết nối server');
+    } finally {
+      setWalletLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchWallet();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handlePayment = async () => {
+    if (isProcessing) return;
+
+    setPaymentError(null);
+
+    if (paymentMethod === 'banking') {
+      setPaymentError('Chức năng đang bảo trì.');
+      return;
+    }
+
+    if (!wallet) {
+      setPaymentError('Không lấy được ví.');
+      return;
+    }
+
+    if ((wallet.balance ?? 0) < depositAmount) {
+      setPaymentError('Số dư không đủ.');
+      return;
+    }
+
+    const userId = bookingData?.user_id ?? bookingData?.userId ?? mockUser.user_id;
+
+    try {
+      setIsProcessing(true);
+
+      // =========================
+      // 1️⃣ tạo booking
+      // =========================
+      const bookingRes = await fetch('http://localhost:3000/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          table_code: bookingData?.tableCode,
+          table_id: bookingData?.tableId,
+          guests: bookingData?.guests,
+          date: bookingData?.date,
+          time: bookingData?.time,
+          duration: bookingData?.duration,
+          deposit_amount: depositAmount,
+          payment_method: paymentMethod,
+        }),
+      });
+
+      const bookingResult = await bookingRes.json();
+
+      if (!bookingRes.ok) {
+        throw new Error(bookingResult?.message || 'Tạo booking thất bại');
+      }
+
+      const bookingId = bookingResult.booking.id;
+
+      // =========================
+      // 2️⃣ trừ tiền ví
+      // =========================
+      const payRes = await fetch('http://localhost:3000/api/wallet/pay-deposit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          booking_id: bookingId,
+          amount: depositAmount,
+        }),
+      });
+
+      const payData = await payRes.json();
+
+      if (!payRes.ok) {
+        throw new Error(payData?.message || 'Thanh toán thất bại');
+      }
+
+      // =========================
+      // 3️⃣ success
+      // =========================
+      setIsSuccess(true);
+
       setTimeout(() => {
         navigate('/payment-success', {
           state: {
-            ...bookingData,
+            ...bookingResult.booking,
             amount: depositAmount,
             paymentMethod,
           },
         });
-      }, 1500);
-    }, 2000);
+      }, 1000);
+    } catch (err: any) {
+      console.error(err);
+      setPaymentError(err.message || 'Lỗi server');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (isSuccess) {
@@ -53,11 +183,21 @@ export function PaymentScreen({ bookingData }: PaymentScreenProps) {
           animate={{ scale: 1, opacity: 1 }}
           className="text-center"
         >
-          <div className="w-24 h-24 bg-linear-to-br from-green-400 to-green-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-200">
-            <CheckCircle2 className="w-12 h-12 text-white" />
+          <div className="flex flex-col items-center justify-center text-center">
+            <div className="relative w-24 h-24 mb-6">
+              {/* vòng ripple */}
+              <div className="absolute inset-0 rounded-full bg-green-400/30 animate-ping"></div>
+
+              {/* vòng chính */}
+              <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-xl shadow-green-300">
+                <CheckCircle2 className="w-12 h-12 text-white stroke-[3]" />
+              </div>
+            </div>
+
+            <h2 className="text-green-600 font-semibold text-lg">Thanh toán thành công!</h2>
+
+            <p className="text-gray-500 text-sm mt-1">Đang chuyển hướng...</p>
           </div>
-          <h2 className="text-green-600 mb-2">Thanh toán thành công!</h2>
-          <p className="text-gray-600">Đang chuyển hướng...</p>
         </motion.div>
       </div>
     );
@@ -104,13 +244,10 @@ export function PaymentScreen({ bookingData }: PaymentScreenProps) {
                 <p className="text-gray-900">{bookingData?.tableCode}</p>
               </div>
 
-              <div className="p-3 bg-white rounded-2xl">
-                <div className="flex items-center gap-2 mb-1">
-                  <MapPin className="w-4 h-4 text-orange-500" />
-                  <p className="text-xs text-gray-600">Khu vực</p>
-                </div>
+              {/* <div className="p-3 bg-white rounded-2xl">
+                
                 <p className="text-gray-900">{bookingData?.area}</p>
-              </div>
+              </div> */}
 
               <div className="p-3 bg-white rounded-2xl">
                 <div className="flex items-center gap-2 mb-1">
@@ -156,32 +293,103 @@ export function PaymentScreen({ bookingData }: PaymentScreenProps) {
           {/* Payment Method */}
           <div>
             <h3 className="text-gray-900 mb-4">Phương thức thanh toán</h3>
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              <Card className="p-4 rounded-2xl border-2 border-orange-500 bg-orange-50">
+
+            <div className="space-y-3">
+              {paymentError && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200">
+                  <p className="text-sm text-red-600">{paymentError}</p>
+                </div>
+              )}
+              {/* Banking */}
+              <Card
+                onClick={() => {
+                  setPaymentMethod('banking');
+                  setPaymentError(null);
+                }}
+                className={`p-4 rounded-2xl border-2 cursor-pointer transition
+        ${paymentMethod === 'banking' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-white'}
+      `}
+              >
                 <div className="flex items-center">
-                  <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-green-500 to-green-600 flex items-center justify-center mr-3">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center mr-3">
                     <QrCode className="w-6 h-6 text-white" />
                   </div>
                   <div className="flex-1">
                     <p className="text-gray-900">Chuyển khoản ngân hàng</p>
                     <p className="text-xs text-gray-500">QR Banking, Internet Banking</p>
                   </div>
+
+                  <div
+                    className={`w-5 h-5 rounded-full border-2
+            ${paymentMethod === 'banking' ? 'border-orange-500 bg-orange-500' : 'border-gray-300'}
+          `}
+                  />
                 </div>
               </Card>
-            </motion.div>
+
+              {/* Wallet */}
+              <Card
+                onClick={() => {
+                  setPaymentMethod('wallet');
+                  setPaymentError(null);
+                }}
+                className={`p-4 rounded-2xl border-2 cursor-pointer transition
+        ${paymentMethod === 'wallet' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-white'}
+      `}
+              >
+                <div className="flex items-center">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center mr-3">
+                    <Wallet className="w-6 h-6 text-white" />
+                  </div>
+
+                  <div className="flex-1">
+                    <p className="text-gray-900">Thanh toán bằng ví</p>
+
+                    {walletLoading ? (
+                      <p className="text-xs text-gray-500">Đang tải số dư...</p>
+                    ) : walletError ? (
+                      <p className="text-xs text-red-600">{walletError}</p>
+                    ) : (
+                      <div className="text-xs text-gray-500">
+                        Số dư:{' '}
+                        <span className="font-medium">
+                          {(wallet?.balance ?? 0).toLocaleString('vi-VN')}đ
+                        </span>
+                        {paymentMethod === 'wallet' &&
+                          ((wallet?.balance ?? 0) < depositAmount ? (
+                            <div className="text-xs text-red-600">
+                              Thiếu{' '}
+                              {(depositAmount - (wallet?.balance ?? 0)).toLocaleString('vi-VN')}đ để
+                              đặt cọc
+                            </div>
+                          ) : (
+                            <div className="text-xs text-green-600">Đủ số dư để đặt cọc</div>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div
+                    className={`w-5 h-5 rounded-full border-2
+            ${paymentMethod === 'wallet' ? 'border-orange-500 bg-orange-500' : 'border-gray-300'}
+          `}
+                  />
+                </div>
+              </Card>
+            </div>
           </div>
 
           {/* Payment Button */}
           <Button
             onClick={handlePayment}
-            disabled={isProcessing}
-            className="w-full h-14 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl shadow-lg shadow-orange-200 disabled:opacity-50"
+            disabled={
+              isProcessing || walletLoading || (paymentMethod === 'wallet' && !hasEnoughBalance)
+            }
+            className="w-full h-14 ..."
           >
-            {isProcessing ? (
+            {paymentMethod === 'wallet' && !hasEnoughBalance ? (
+              'Số dư không đủ'
+            ) : isProcessing ? (
               <div className="flex items-center">
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                 Đang xử lý...

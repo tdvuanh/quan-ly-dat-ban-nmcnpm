@@ -30,7 +30,9 @@ export interface Booking {
 }
 
 export interface User {
-  id: string;
+  id: string; // id mock nội bộ (FE)
+  user_id: string; // id trong DB (BE) -> dùng gọi API wallet/topup
+  wallet_id?: number | string; // optional, vì ví có thể chưa tạo
   name: string;
   email: string;
   phone: string;
@@ -195,6 +197,7 @@ export const notifications: Notification[] = [
 
 export const mockUser: User = {
   id: 'u1',
+  user_id: '7f23a26e-3715-4f74-88bb-6107ad915883', // <-- UUID thật từ BE/DB
   name: 'Khách hàng Demo',
   email: 'demo@example.com',
   phone: '0912345678',
@@ -203,6 +206,7 @@ export const mockUser: User = {
 
 export const mockAdmin: User = {
   id: 'a1',
+  user_id: '11111111-1111-1111-1111-111111111111',
   name: 'Admin Demo',
   email: 'admin@restaurant.com',
   phone: '0909999999',

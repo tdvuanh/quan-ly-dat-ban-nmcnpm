@@ -13,9 +13,11 @@ model notifications {
   user_id         String?   @db.Uuid
   title           String?   @db.VarChar(200)
   content         String?
+  target_role     String?   @db.VarChar(20)  // admin | customer
   is_read         Boolean?  @default(false)
   created_at      DateTime? @default(now()) @db.Timestamptz(6)
-  users           users?    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+
+  users users? @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 }
 
 model payments {
@@ -27,6 +29,16 @@ model payments {
   paid_at        DateTime?       @db.Timestamptz(6)
   created_at     DateTime?       @default(now()) @db.Timestamptz(6)
   reservations   reservations?   @relation(fields: [reservation_id], references: [reservation_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model wallets {
+  wallet_id  BigInt    @id @default(autoincrement())
+  user_id    String    @unique @db.Uuid
+  balance    Decimal   @default(0) @db.Decimal(12, 2)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+
+  users users @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model reservation_tables {
@@ -65,11 +77,42 @@ model tables {
   reservation_tables reservation_tables[]
 }
 
+model bookings {
+  id      String  @id @default(uuid()) @db.Uuid
+  user_id String? @db.Uuid
+
+  table_id   BigInt?
+  table_code String
+  area       String?
+  guests     Int
+
+  date String
+  time String
+  duration Float?
+
+  deposit_amount Decimal @default(0)
+  payment_method String?
+  status         String  @default("pending")
+
+  customer_name String?
+  phone         String?
+  notes         String?
+
+  created_at DateTime? @default(now())
+  updated_at DateTime? @updatedAt
+
+  users users? @relation(fields: [user_id], references: [user_id])
+
+  @@index([user_id])
+  @@index([table_id])
+}
 model users {
   user_id       String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   full_name     String?         @db.VarChar(150)
+  wallet        wallets?
   phone         String?         @db.VarChar(20)
   email         String?         @unique @db.VarChar(150)
+  bookings      bookings[]
   password_hash String?
   role          String?         @default("staff") @db.VarChar(20)
   created_at    DateTime?       @default(now()) @db.Timestamptz(6)

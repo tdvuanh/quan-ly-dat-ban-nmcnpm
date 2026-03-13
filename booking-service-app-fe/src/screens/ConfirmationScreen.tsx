@@ -13,15 +13,14 @@ import {
   MapPin,
 } from 'lucide-react';
 import { Footer } from '@/components/Footer';
-import type { Screen } from '@/config';
-import { useNavigate } from 'react-router-dom';
 
-interface ConfirmationScreenProps {
-  bookingData?: any;
-}
+import { useNavigate, useLocation } from 'react-router-dom';
 
-export function ConfirmationScreen({ bookingData }: ConfirmationScreenProps) {
+export function ConfirmationScreen() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const bookingData = location.state as any;
   return (
     <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-orange-50 flex flex-col">
       {/* Header */}
@@ -104,10 +103,6 @@ export function ConfirmationScreen({ bookingData }: ConfirmationScreenProps) {
                 <div className="flex items-center">
                   <div className="w-10 h-10 rounded-2xl bg-orange-100 flex items-center justify-center mr-3">
                     <MapPin className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Khu vực</p>
-                    <p className="text-gray-900">{bookingData?.area}</p>
                   </div>
                 </div>
 

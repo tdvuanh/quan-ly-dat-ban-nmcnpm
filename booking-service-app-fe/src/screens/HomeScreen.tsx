@@ -1,9 +1,10 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { motion } from 'motion/react';
 import { Calendar, User, Users, Bell, MapPin, Clock } from 'lucide-react';
+import type { Table, TableStatus } from '@/types/table';
 import {
   Dialog,
   DialogContent,
@@ -12,14 +13,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Footer } from '@/components/Footer';
-import { tables } from '@/data/mockData';
 import { NotificationPopup } from '@/components/NotificationPopup';
-
 import { useNavigate } from 'react-router-dom';
 
 // Generate time slots từ 10:00 đến 22:00
 const generateOperatingHours = () => {
-  const hours = [];
+  const hours: string[] = [];
   for (let i = 10; i <= 22; i++) {
     hours.push(`${i.toString().padStart(2, '0')}:00`);
     if (i < 22) {
@@ -29,72 +28,118 @@ const generateOperatingHours = () => {
   return hours;
 };
 
-// Mock data giờ đã đặt cho mỗi bàn
-const mockBookedHours: { [tableId: string]: string[] } = {
-  '1': ['12:00', '12:30', '13:00', '18:00', '18:30', '19:00'],
-  '2': ['11:00', '11:30', '19:00', '19:30', '20:00'],
-  '3': ['13:00', '13:30', '14:00', '20:00', '20:30'],
-  '4': ['10:00', '10:30', '17:00', '17:30', '18:00'],
-  '5': ['14:00', '14:30', '15:00', '19:00', '19:30'],
-  '6': ['11:00', '12:00', '18:00', '19:00', '20:00'],
-  '7': ['10:00', '11:00', '16:00', '17:00', '18:00'],
-  '8': ['13:00', '14:00', '19:00', '20:00', '21:00'],
-};
-
-/*************  ✨ Windsurf Command ⭐  *************/
-/**
- * HomeScreen component
- * @param {HomeScreenProps} props - props for HomeScreen component
- * @returns {JSX.Element} - JSX element for HomeScreen component
- * @description HomeScreen component displays a list of tables and their status, and allows users to book a table
- */
 export function HomeScreen() {
   const navigate = useNavigate();
-  const buttonElement = document.getElementById('notificationPopup') as HTMLButtonElement;
-  // const [selectedArea, setSelectedArea] = useState<string | null>(null);
-  // const [searchDa  te, setSearchDate] = useState('2025-11-04');
+
+  const [tables, setTables] = useState<Table[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const [showNotifications, setShowNotifications] = useState(false);
-  const notificationButtonRef = useRef<HTMLButtonElement>(buttonElement);
+  const notificationButtonRef = useRef<HTMLButtonElement | null>(null);
 
   // Available Hours Dialog State
   const [isAvailableHoursDialogOpen, setIsAvailableHoursDialogOpen] = useState(false);
-  const [selectedTableForHours, setSelectedTableForHours] = useState<any>(null);
+  const [selectedTableForHours, setSelectedTableForHours] = useState<Table | null>(null);
 
-  const filteredTables = tables;
+  const [bookedHours, setBookedHours] = useState<string[]>([]);
+
   const timeSlots = generateOperatingHours();
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'available':
-        return 'bg-green-100 text-green-700 border-green-200';
-      case 'booked':
-        return 'bg-orange-100 text-orange-700 border-orange-200';
-      case 'serving':
-        return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'cleaning':
-        return 'bg-gray-100 text-gray-700 border-gray-200';
-      default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+  useEffect(() => {
+    const fetchTables = async () => {
+      try {
+        const res = await fetch('http://localhost:3000/api/tables');
+        if (!res.ok) throw new Error('Failed to fetch tables');
+
+        const data = await res.json();
+
+        const mapped = data.tables.map((t: any) => ({
+          table_id: t.table_id,
+          name: t.name,
+          capacity: t.capacity,
+          status: t.status,
+        }));
+
+        setTables(mapped);
+      } catch (err) {
+        console.error('Fetch tables error:', err);
+        setTables([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTables();
+  }, []);
+
+  const [todayBookings, setTodayBookings] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchTodayBookings = async () => {
+      const today = new Date().toISOString().split('T')[0];
+
+      const res = await fetch(`http://localhost:3000/api/bookings?date=${today}`);
+
+      const data = await res.json();
+
+      setTodayBookings(data.bookings || []);
+    };
+
+    fetchTodayBookings();
+  }, []);
+
+  const fetchAvailableHours = async (tableId: string) => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+
+      const res = await fetch(
+        `http://localhost:3000/api/bookings/table/${tableId}/available-hours?date=${today}`
+      );
+
+      if (!res.ok) throw new Error('Failed to fetch hours');
+
+      const data = await res.json();
+
+      setBookedHours(data.booked_hours ?? []);
+    } catch (err) {
+      console.error(err);
+      setBookedHours([]);
     }
   };
-
-  const getStatusText = (status: string) => {
+  const getStatusText = (status: TableStatus) => {
     switch (status) {
       case 'available':
         return 'Trống';
-      case 'booked':
+      case 'reserved':
         return 'Đã đặt';
-      case 'serving':
-        return 'Đang phục vụ';
-      case 'cleaning':
-        return 'Dọn dẹp';
-      default:
-        return status;
+      case 'occupied':
+        return 'Đang sử dụng';
+      case 'disabled':
+        return 'Ngưng dùng';
     }
   };
 
+  const getStatusColor = (status: TableStatus) => {
+    switch (status) {
+      case 'available':
+        return 'bg-green-100 text-green-700 border-green-200';
+      case 'reserved':
+        return 'bg-orange-100 text-orange-700 border-orange-200';
+      case 'occupied':
+        return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'disabled':
+        return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+  const isTableBookedToday = (tableId: number) => {
+    return todayBookings.some((b) => b.table_id === tableId);
+  };
   const availableTablesCount = tables.filter((t) => t.status === 'available').length;
-  const bookedTablesCount = tables.filter((t) => t.status === 'booked').length;
+  const bookedTablesCount = tables.filter((t) => t.status === 'reserved').length;
+
+  if (loading) {
+    return <div className="p-6">Đang tải danh sách bàn...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-orange-50 flex flex-col">
@@ -110,15 +155,17 @@ export function HomeScreen() {
               <p className="text-xs text-gray-500">Xin chào! 👋</p>
             </div>
           </div>
+
           <div className="flex gap-2">
             <button
-              onClick={() => setShowNotifications(!showNotifications)}
+              onClick={() => setShowNotifications((v) => !v)}
               ref={notificationButtonRef}
               className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors relative"
             >
               <Bell className="w-5 h-5 text-gray-600" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full"></span>
             </button>
+
             <button
               onClick={() => navigate('/profile')}
               className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center hover:bg-orange-200 transition-colors"
@@ -194,44 +241,53 @@ export function HomeScreen() {
           <div className="flex items-center justify-between mb-3">
             <p className="text-gray-900">
               Danh sách bàn
-              <span className="text-sm text-gray-500 ml-2">({filteredTables.length} bàn)</span>
+              <span className="text-sm text-gray-500 ml-2">({tables.length} bàn)</span>
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            {filteredTables.map((table, index) => (
+            {tables.map((table, index) => (
               <motion.div
-                key={table.id}
+                key={table.table_id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
                 <Card className="p-3 rounded-2xl border-2 transition-all min-h-[130px] flex flex-col justify-between bg-white">
-                  {/* Header: Tên bàn + Số người + Badge */}
                   <div className="flex items-start justify-between">
                     <div className="flex flex-col gap-2">
-                      <p className="text-gray-900">{table.code}</p>
+                      <p className="text-gray-900">{table.name}</p>
                       <div className="flex items-baseline gap-1 text-sm text-gray-600">
                         <Users className="w-4 h-4" />
                         <span>{table.capacity} người</span>
                       </div>
                     </div>
+
                     <Badge
                       variant="outline"
-                      className={`text-xs rounded-full px-2 py-1 ${getStatusColor(table.status)}`}
+                      className={`text-xs rounded-full px-2 py-1 ${
+                        isTableBookedToday(Number(table.table_id))
+                          ? 'bg-orange-100 text-orange-700 border-orange-200'
+                          : 'bg-green-100 text-green-700 border-green-200'
+                      }`}
                     >
-                      {getStatusText(table.status)}
+                      {isTableBookedToday(Number(table.table_id)) ? 'Đã đặt' : 'Trống'}
                     </Badge>
                   </div>
 
-                  {/* Footer: Action Buttons */}
                   <div className="flex gap-2">
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={(e) => {
                         e.stopPropagation();
+
+                        setBookedHours([]);
+
                         setSelectedTableForHours(table);
+
+                        fetchAvailableHours(table.table_id);
+
                         setIsAvailableHoursDialogOpen(true);
                       }}
                       className="flex-1 text-xs rounded-xl h-8 border-green-200 text-green-700 hover:bg-green-50"
@@ -239,18 +295,6 @@ export function HomeScreen() {
                       <Clock className="w-3 h-3 mr-1" />
                       Xem giờ trống
                     </Button>
-                    {table.status === 'available' && (
-                      <Button
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate('/booking', { state: { tableId: table.id } });
-                        }}
-                        className="flex-1 text-xs rounded-xl h-8 bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
-                      >
-                        Đặt ngay
-                      </Button>
-                    )}
                   </div>
                 </Card>
               </motion.div>
@@ -270,14 +314,13 @@ export function HomeScreen() {
       <Dialog open={isAvailableHoursDialogOpen} onOpenChange={setIsAvailableHoursDialogOpen}>
         <DialogContent className="rounded-3xl max-w-md">
           <DialogHeader>
-            <DialogTitle>Giờ trống - Bàn {selectedTableForHours?.code}</DialogTitle>
+            <DialogTitle>Giờ trống - Bàn {selectedTableForHours?.name}</DialogTitle>
             <DialogDescription>Thời gian hoạt động: 10:00 - 22:00</DialogDescription>
           </DialogHeader>
 
           <div className="py-4">
             <div className="grid grid-cols-4 gap-2">
               {timeSlots.map((hour) => {
-                const bookedHours = mockBookedHours[selectedTableForHours?.id || ''] || [];
                 const isBooked = bookedHours.includes(hour);
 
                 return (
@@ -290,7 +333,7 @@ export function HomeScreen() {
                     onClick={() => {
                       if (!isBooked) {
                         navigate('/booking', {
-                          state: { tableId: selectedTableForHours?.id, time: hour },
+                          state: { tableId: selectedTableForHours?.table_id, time: hour },
                         });
                         setIsAvailableHoursDialogOpen(false);
                       }
@@ -310,14 +353,13 @@ export function HomeScreen() {
               })}
             </div>
 
-            {/* Legend */}
             <div className="mt-6 flex items-center justify-center gap-6">
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-linear-to-r from-green-50 to-green-100 border-2 border-green-200"></div>
+                <div className="w-4 h-4 rounded bg-linear-to-r from-green-50 to-green-100 border-2 border-green-200" />
                 <span className="text-xs text-gray-600">Giờ trống</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-gray-100"></div>
+                <div className="w-4 h-4 rounded bg-gray-100" />
                 <span className="text-xs text-gray-600">Đã đặt</span>
               </div>
             </div>
@@ -333,7 +375,6 @@ export function HomeScreen() {
         </DialogContent>
       </Dialog>
 
-      {/* Footer */}
       <Footer />
     </div>
   );
