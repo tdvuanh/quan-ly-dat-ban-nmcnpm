@@ -210,7 +210,7 @@ export function AdminDashboard() {
     if (!newTable.code.trim()) return;
 
     try {
-      const res = await fetch('http://localhost:3000/api/tables', {
+      const res = await fetch('https://quan-ly-dat-ban-nmcnpm-kio7.vercel.app/tables', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -237,7 +237,7 @@ export function AdminDashboard() {
 
   const handleDeleteTable = async (tableId: string) => {
     try {
-      await fetch(`http://localhost:3000/api/tables/${tableId}`, {
+      await fetch(`https://quan-ly-dat-ban-nmcnpm-kio7.vercel.app/api/tables/${tableId}`, {
         method: 'DELETE',
       });
 
