@@ -1,0 +1,116 @@
+import prismaClient from "../config/prisma";
+import { Request, Response } from "express";
+
+class TableController {
+  getTables = async (_req: Request, res: Response) => {
+    try {
+      const tables = await prismaClient.tables.findMany({
+        orderBy: {
+          table_id: "asc",
+        },
+      });
+
+      const serialized = tables.map((t) => ({
+        ...t,
+        table_id: t.table_id.toString(),
+      }));
+
+      return res.json({ tables: serialized });
+    } catch (error) {
+      console.error("Error fetching tables:", error);
+      return res.status(500).json({ message: "Lỗi server" });
+    }
+  };
+
+  createTables = async (_req: Request, res: Response) => {
+    try {
+      const { tableName, capacity } = _req.body;
+
+      if (!tableName || typeof tableName !== "string") {
+        return res.status(400).json({ message: "Số bàn (tableName) không hợp lệ" });
+      }
+
+      if (!capacity || typeof capacity !== "number") {
+        return res.status(400).json({ message: "Sức chứa (capacity) phải là số" });
+      }
+
+      const newTable = await prismaClient.tables.create({
+        data: {
+          name: tableName,
+          capacity,
+          status: "available",
+        },
+      });
+
+      const serialized = {
+        ...newTable,
+        table_id: newTable.table_id.toString(),
+      };
+
+      return res.status(201).json({
+        message: "Thêm bàn mới thành công",
+        data: serialized,
+      });
+    } catch (error) {
+      console.error("Error creating table:", error);
+      return res.status(500).json({ message: "Lỗi server" });
+    }
+  };
+
+  updateTableStatus = async (req: Request, res: Response) => {
+    try {
+      const { tableId } = req.params;
+      const { status } = req.body;
+
+      const idNum = Number(tableId);
+      if (!tableId || Number.isNaN(idNum)) {
+        return res.status(400).json({ message: "tableId không hợp lệ" });
+      }
+
+      const validStatuses = ["available", "reserved", "occupied", "disabled"];
+      if (!status || typeof status !== "string" || !validStatuses.includes(status)) {
+        return res.status(400).json({ message: "Trạng thái không hợp lệ" });
+      }
+
+      const updated = await prismaClient.tables.update({
+        where: { table_id: idNum },
+        data: { status: status as any }, // enum lowercase nên OK
+      });
+
+      return res.json({
+        message: "Cập nhật trạng thái thành công",
+        data: { ...updated, table_id: updated.table_id.toString() },
+      });
+    } catch (error: any) {
+      console.error("Error update status:", error);
+
+      if (error?.code === "P2025") {
+        return res.status(404).json({ message: "Không tìm thấy bàn để cập nhật" });
+      }
+
+      return res.status(500).json({ message: "Lỗi server", detail: error?.message });
+    }
+  };
+  deleteTable = async (req: Request, res: Response) => {
+    try {
+      const { tableId } = req.params;
+
+      await prismaClient.tables.delete({
+        where: { table_id: Number(tableId) },
+      });
+
+      return res.json({
+        message: "Xoá bàn thành công",
+        id: tableId,
+      });
+    } catch (error: any) {
+      console.error("Error deleting table:", error);
+      if (error?.code === "P2025") {
+        return res.status(404).json({ message: "Không tìm thấy bàn để xoá" });
+      }
+      return res.status(500).json({ message: "Lỗi server" });
+    }
+  };
+}
+
+export default new TableController();

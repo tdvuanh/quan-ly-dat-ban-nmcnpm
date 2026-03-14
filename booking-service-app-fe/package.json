@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "name": "booking-service-app-fe",
   "private": true,
   "version": "0.0.0",
@@ -90,28 +89,5 @@
     "typescript-eslint": "^8.46.3",
     "vite": "^7.2.4",
     "vitest": "^4.0.7"
-=======
-  "devDependencies": {
-    "eslint": "^9.39.1",
-    "husky": "^9.1.7",
-    "lint-staged": "^16.2.7",
-    "prettier": "^3.7.4"
-  },
-  "scripts": {
-    "prepare": "husky"
-  },
-  "lint-staged": {
-    "booking-service-app-fe/src/**/*.{js,jsx,ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "booking-service-be/src/**/*.{js,jsx,ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{json,md}": [
-      "prettier --write"
-    ]
->>>>>>> 8451866c652b8341c5108392a5f94e603aff00b9
   }
 }

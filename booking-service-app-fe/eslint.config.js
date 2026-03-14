@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
 import tseslint from '@typescript-eslint/eslint-plugin';
@@ -46,10 +45,5 @@ export default [
       '@typescript-eslint/no-unused-vars': 'off',
       'react/prop-types': 'off',
     },
-=======
-module.exports = [
-  {
-    ignores: ["node_modules", "*.config.js"],
->>>>>>> 8451866c652b8341c5108392a5f94e603aff00b9
   },
 ];
