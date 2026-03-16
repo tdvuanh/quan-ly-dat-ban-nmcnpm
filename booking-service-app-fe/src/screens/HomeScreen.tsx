@@ -14,7 +14,9 @@ import {
 } from '@/components/ui/dialog';
 import { Footer } from '@/components/Footer';
 import { NotificationPopup } from '@/components/NotificationPopup';
-import { useNavigate } from 'react-router-dom';
+import { data, useNavigate } from 'react-router-dom';
+import { tablesApi } from '@/api/tables.api';
+import { bookingsApi } from '@/api/bookingsApi';
 
 // Generate time slots từ 10:00 đến 22:00
 const generateOperatingHours = () => {
@@ -48,12 +50,9 @@ export function HomeScreen() {
   useEffect(() => {
     const fetchTables = async () => {
       try {
-        const res = await fetch('http://localhost:3000/api/tables');
-        if (!res.ok) throw new Error('Failed to fetch tables');
+        const res = await tablesApi.getTables();
 
-        const data = await res.json();
-
-        const mapped = data.tables.map((t: any) => ({
+        const mapped = res.data.tables.map((t: any) => ({
           table_id: t.table_id,
           name: t.name,
           capacity: t.capacity,
@@ -78,11 +77,9 @@ export function HomeScreen() {
     const fetchTodayBookings = async () => {
       const today = new Date().toISOString().split('T')[0];
 
-      const res = await fetch(`http://localhost:3000/api/bookings?date=${today}`);
+      const res = await bookingsApi.getTodayBookings(today);
 
-      const data = await res.json();
-
-      setTodayBookings(data.bookings || []);
+      setTodayBookings(res.data.bookings || []);
     };
 
     fetchTodayBookings();
@@ -92,15 +89,9 @@ export function HomeScreen() {
     try {
       const today = new Date().toISOString().split('T')[0];
 
-      const res = await fetch(
-        `http://localhost:3000/api/bookings/table/${tableId}/available-hours?date=${today}`
-      );
+      const res = await bookingsApi.getBookedHours(tableId, today);
 
-      if (!res.ok) throw new Error('Failed to fetch hours');
-
-      const data = await res.json();
-
-      setBookedHours(data.booked_hours ?? []);
+      setBookedHours(res.data.booked_hours ?? []);
     } catch (err) {
       console.error(err);
       setBookedHours([]);
