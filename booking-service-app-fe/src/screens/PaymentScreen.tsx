@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
+import { walletApi } from '@/api/walletApi';
+import { bookingsApi } from '@/api/bookingsApi';
+
 import { motion } from 'motion/react';
 import {
   ArrowLeft,
@@ -52,27 +55,20 @@ export function PaymentScreen(props: PaymentScreenProps) {
       setWalletLoading(true);
       setWalletError(null);
 
-      // TODO: thay mockUser.user_id bằng user id thật của bạn
       const userId = bookingData?.user_id ?? mockUser.user_id;
 
-      const res = await fetch(`http://localhost:3000/api/wallet/${userId}`);
-      const data = await res.json();
+      const res = await walletApi.getWallet(userId);
 
-      if (!res.ok) {
-        setWallet(null);
-        setWalletError(data?.message ?? 'Không lấy được ví');
-        return;
-      }
+      const w = res.data.wallet;
 
-      const w = data.wallet;
       setWallet({
         wallet_id: w.wallet_id,
         user_id: w.user_id,
         balance: typeof w.balance === 'string' ? Number(w.balance) : w.balance,
       });
-    } catch (e) {
+    } catch (err) {
       setWallet(null);
-      setWalletError('Lỗi kết nối server');
+      setWalletError('Không lấy được ví');
     } finally {
       setWalletLoading(false);
     }
@@ -88,80 +84,51 @@ export function PaymentScreen(props: PaymentScreenProps) {
     setPaymentError(null);
 
     if (paymentMethod === 'banking') {
-      setPaymentError('Chức năng đang bảo trì.');
+      setPaymentError('Chức năng đang bảo trì');
       return;
     }
 
     if (!wallet) {
-      setPaymentError('Không lấy được ví.');
+      setPaymentError('Không lấy được ví');
       return;
     }
 
-    if ((wallet.balance ?? 0) < depositAmount) {
-      setPaymentError('Số dư không đủ.');
+    if (wallet.balance < depositAmount) {
+      setPaymentError('Số dư không đủ');
       return;
     }
 
-    const userId = bookingData?.user_id ?? bookingData?.userId ?? mockUser.user_id;
+    const userId = bookingData?.user_id ?? mockUser.user_id;
 
     try {
       setIsProcessing(true);
 
-      // =========================
-      // 1️⃣ tạo booking
-      // =========================
-      const bookingRes = await fetch('http://localhost:3000/api/bookings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: userId,
-          table_code: bookingData?.tableCode,
-          table_id: bookingData?.tableId,
-          guests: bookingData?.guests,
-          date: bookingData?.date,
-          time: bookingData?.time,
-          duration: bookingData?.duration,
-          deposit_amount: depositAmount,
-          payment_method: paymentMethod,
-        }),
+      const bookingRes = await bookingsApi.createBooking({
+        user_id: userId,
+        table_code: bookingData?.tableCode,
+        table_id: bookingData?.tableId,
+        guests: bookingData?.guests,
+        date: bookingData?.date,
+        time: bookingData?.time,
+        duration: bookingData?.duration,
+        deposit_amount: depositAmount,
+        payment_method: paymentMethod,
       });
 
-      const bookingResult = await bookingRes.json();
+      const bookingId = bookingRes.data.booking.id;
 
-      if (!bookingRes.ok) {
-        throw new Error(bookingResult?.message || 'Tạo booking thất bại');
-      }
-
-      const bookingId = bookingResult.booking.id;
-
-      // =========================
-      // 2️⃣ trừ tiền ví
-      // =========================
-      const payRes = await fetch('http://localhost:3000/api/wallet/pay-deposit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: userId,
-          booking_id: bookingId,
-          amount: depositAmount,
-        }),
+      await walletApi.payDeposit({
+        user_id: userId,
+        booking_id: bookingId,
+        amount: depositAmount,
       });
 
-      const payData = await payRes.json();
-
-      if (!payRes.ok) {
-        throw new Error(payData?.message || 'Thanh toán thất bại');
-      }
-
-      // =========================
-      // 3️⃣ success
-      // =========================
       setIsSuccess(true);
 
       setTimeout(() => {
         navigate('/payment-success', {
           state: {
-            ...bookingResult.booking,
+            ...bookingRes.data.booking,
             amount: depositAmount,
             paymentMethod,
           },
@@ -169,7 +136,7 @@ export function PaymentScreen(props: PaymentScreenProps) {
       }, 1000);
     } catch (err: any) {
       console.error(err);
-      setPaymentError(err.message || 'Lỗi server');
+      setPaymentError(err.message || 'Thanh toán thất bại');
     } finally {
       setIsProcessing(false);
     }

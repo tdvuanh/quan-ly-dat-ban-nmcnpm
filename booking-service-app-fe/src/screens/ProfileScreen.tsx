@@ -7,6 +7,8 @@ import { ArrowLeft, User, Calendar, Wallet } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Footer } from '@/components/Footer';
 import { mockUser } from '@/data/mockData';
+import { bookingsApi } from '@/api/bookingsApi';
+import { walletApi } from '@/api/walletApi';
 import {
   Dialog,
   DialogContent,
@@ -49,9 +51,9 @@ type Booking = {
 export function ProfileScreen() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('bookings');
-  const [bookings, setBookings] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-  const [selectedBooking] = useState<any>(null);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [cancelReason, setCancelReason] = useState('');
 
   const [topupAmount, setTopupAmount] = useState<number>(10000);
@@ -66,25 +68,20 @@ export function ProfileScreen() {
 
   const fetchBookings = async () => {
     try {
-      const userId = mockUser.user_id; // TODO: thay user thật
-      const res = await fetch(`http://localhost:3000/api/bookings/${userId}`);
-      const data = await res.json();
+      const userId = mockUser.user_id;
 
-      if (!res.ok) {
-        showInfo('Lỗi', data?.message ?? 'Không lấy được lịch sử đặt bàn');
-        return;
-      }
+      const res = await bookingsApi.getUserBookings(userId);
 
-      const mapped: Booking[] = (data.bookings ?? []).map((b: any) => ({
+      const mapped: Booking[] = (res.data.bookings ?? []).map((b: any) => ({
         ...b,
-        tableCode: b.table_code, // ✅ map để UI dùng
+        tableCode: b.table_code,
         guests: Number(b.guests ?? 0),
         duration: b.duration != null ? Number(b.duration) : null,
       }));
 
       setBookings(mapped);
-    } catch (e) {
-      showInfo('Lỗi', 'Không kết nối được server');
+    } catch (err) {
+      showInfo('Lỗi', 'Không lấy được lịch sử đặt bàn');
     }
   };
 
@@ -115,19 +112,12 @@ export function ProfileScreen() {
       setIsWalletLoading(true);
       setWalletError(null);
 
-      const res = await fetch(`http://localhost:3000/api/wallet/${mockUser.user_id}`);
-      const data = await res.json();
+      const res = await walletApi.getWallet(mockUser.user_id);
 
-      if (!res.ok) {
-        setWallet(null);
-        setWalletError(data?.message ?? 'Không lấy được ví');
-        return;
-      }
-
-      setWallet(data.wallet);
+      setWallet(res.data.wallet);
     } catch (err) {
       setWallet(null);
-      setWalletError('Lỗi kết nối server');
+      setWalletError('Không lấy được ví');
     } finally {
       setIsWalletLoading(false);
     }
@@ -136,32 +126,21 @@ export function ProfileScreen() {
     try {
       setIsTopupLoading(true);
 
-      const res = await fetch('http://localhost:3000/api/wallet/topup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: mockUser.user_id, // nhớ dùng đúng user id
-          amount: topupAmount,
-        }),
+      await walletApi.topup({
+        user_id: mockUser.user_id,
+        amount: topupAmount,
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        showInfo('Nạp tiền thất bại', data?.message ?? 'Không nạp được');
-        return;
-      }
-
       showSuccess('Nạp tiền thành công', `+${topupAmount}`);
-      await fetchWallet(); // cập nhật lại ví
-    } catch (e) {
-      showInfo('Lỗi', 'Không kết nối được server');
+
+      await fetchWallet();
+    } catch (err: any) {
+      showInfo('Nạp tiền thất bại', err?.response?.data?.message ?? 'Không nạp được');
     } finally {
       setIsTopupLoading(false);
     }
   };
-
-  const BookingCard = ({ booking }: { booking: any }) => {
+  const BookingCard = ({ booking }: { booking: Booking }) => {
     // Format date and time: hh:mm dd/mm/yyyy
     const formatDateTime = (dateStr: string, timeStr: string) => {
       return `${timeStr} ${dateStr}`;
