@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { bookingsApi } from '@/api/bookingsApi';
 import {
   Select,
   SelectContent,
@@ -17,7 +18,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { motion } from 'motion/react';
 import { ArrowLeft, Users, Calendar, Clock, MessageSquare, User, Phone } from 'lucide-react';
 import { areas, generateTimeSlots } from '@/data/mockData';
-import { format, set } from 'date-fns';
+import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Footer } from '@/components/Footer';
 import { useNotification } from '@/context/NotificationContext';
@@ -71,22 +72,22 @@ export function BookingScreen({ initialData }: BookingScreenProps) {
 
       const formattedDate = format(date, 'yyyy-MM-dd');
 
-      const res = await fetch(
-        `http://localhost:3000/api/bookings/tables/available?date=${formattedDate}&time=${selectedTime}`
-      );
+      const res = await bookingsApi.getAvailableTables(formattedDate, selectedTime);
 
-      const data = await res.json();
-
-      setTables(data.tables || []);
+      setTables(res.data.tables || []);
     } catch (err) {
-      console.error('Fetch tables error:', err);
+      console.error(err);
     } finally {
       setLoadingTables(false);
     }
   };
   useEffect(() => {
-    setSelectedTableId(null);
-    fetchAvailableTables();
+    const loadTables = async () => {
+      setSelectedTableId(null);
+      await fetchAvailableTables();
+    };
+
+    loadTables();
   }, [date, selectedTime]);
 
   // Update guests when table is selected
@@ -111,28 +112,21 @@ export function BookingScreen({ initialData }: BookingScreenProps) {
     if (!selectedTable) return;
 
     try {
-      await fetch('http://localhost:3000/api/bookings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: null,
-          table_id: Number(selectedTableId),
-          table_code: selectedTable.name,
-          area: selectedTable.area,
-          guests,
-          date: format(date, 'yyyy-MM-dd'),
-          time: selectedTime,
-          duration,
-          deposit_amount: 0,
-          payment_method: 'wallet',
-          customer_name: customerName,
-          phone: phoneNumber,
-          notes,
-        }),
+      await bookingsApi.createBooking({
+        user_id: null,
+        table_id: Number(selectedTableId),
+        table_code: selectedTable.name,
+        area: selectedTable.area,
+        guests,
+        date: format(date, 'yyyy-MM-dd'),
+        time: selectedTime,
+        duration,
+        deposit_amount: 0,
+        payment_method: 'wallet',
+        customer_name: customerName,
+        phone: phoneNumber,
+        notes,
       });
-
       navigate('/confirmation', {
         state: {
           tableCode: selectedTable.name,
