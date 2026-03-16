@@ -1,22 +1,12 @@
 import { axiosClient } from './axiosClient';
 
-type BookedHoursResponse = {
-  booked_hours: string[];
-};
-export const bookingsApi = {
-  getTodayBookings: (date: string) => axiosClient.get(`/bookings?date=${date}`),
+export const tablesApi = {
+  getTables: () => axiosClient.get('/tables'),
 
-  getBookedHours: (tableId: string, date: string) =>
-    axiosClient.get<BookedHoursResponse>(`/bookings/table/${tableId}/available-hours?date=${date}`),
+  createTable: (data: any) => axiosClient.post('/tables', data),
 
-  createBooking: (data: any) => axiosClient.post('/bookings', data),
+  deleteTable: (tableId: string) => axiosClient.delete(`/tables/${tableId}`),
 
-  finishTable: (tableId: string) => axiosClient.patch(`/bookings/table/${tableId}/finish`),
-
-  getNotifications: () => axiosClient.get('/bookings/notifications/all'),
-
-  getAvailableTables: (date: string, time: string) =>
-    axiosClient.get(`/bookings/tables/available?date=${date}&time=${time}`),
-
-  getUserBookings: (userId: string) => axiosClient.get(`/bookings/${userId}`),
+  updateStatus: (tableId: string, status: string) =>
+    axiosClient.patch(`/tables/${tableId}`, { status }),
 };
