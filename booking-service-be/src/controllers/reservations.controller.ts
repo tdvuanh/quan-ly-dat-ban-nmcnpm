@@ -1,6 +1,8 @@
 import prismaClient from "../config/prisma";
-import { reservation_status } from "../generated/prisma/enums";
+import { reservation_status } from "@prisma/client";
 import { Request, Response } from "express";
+
+import { startOfDay, addDays, isValid, parseISO, add } from "date-fns";
 
 class ReservationController {
   /** GET /api/reservations */
@@ -8,11 +10,29 @@ class ReservationController {
     try {
       const { status, date, customer_phone } = req.query;
 
+      let dateFilter = {};
+      if (date) {
+        const parsedDate = parseISO(date as string);
+        if (!isValid(parsedDate)) {
+          return res.status(400).json({ message: "Invalid date format" });
+        }
+
+        const start = startOfDay(parsedDate);
+        const end = addDays(start, 1);
+
+        dateFilter = {
+          checkin_time: {
+            gte: start,
+            lte: end,
+          },
+        };
+      }
+
       const reservations = await prismaClient.reservations.findMany({
         where: {
-          status: status as reservation_status,
-          customer_phone: customer_phone as string,
-          checkin_time: date ? { gte: new Date(date as string) } : undefined,
+          ...(status && { status: status as reservation_status }),
+          ...(customer_phone && { customer_phone: customer_phone as string }),
+          ...dateFilter,
         },
         include: {
           reservation_tables: true,

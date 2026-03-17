@@ -1,10 +1,61 @@
 import prismaClient from "../config/prisma";
 import { Request, Response } from "express";
+import { startOfDay, addDays, parseISO, isValid, parse } from "date-fns";
 
 class TableController {
-  getTables = async (_req: Request, res: Response) => {
+  getTables = async (req: Request, res: Response) => {
     try {
+      const { date, time, duration } = req.query;
+
+      let requestedCheckin: Date | null = null;
+      let requestedCheckout: Date | null = null;
+
+      if (date && time) {
+        const parsed = parse(`${date} ${time}`, "yyyy-MM-dd HH:mm", new Date());
+
+        if (!isValid(parsed)) {
+          return res.status(400).json({ message: "Invalid date/time format" });
+        }
+
+        requestedCheckin = parsed;
+
+        const durationMs = (Number(duration) || 120) * 60 * 1000; // default 120 phút
+
+        requestedCheckout = new Date(parsed.getTime() + durationMs);
+      }
+
       const tables = await prismaClient.tables.findMany({
+        where:
+          requestedCheckin && requestedCheckout
+            ? {
+                // 🔥 CHỈ LẤY BÀN KHÔNG BỊ CONFLICT
+                NOT: {
+                  reservation_tables: {
+                    some: {
+                      reservations: {
+                        status: {
+                          in: ["pending", "confirmed"],
+                        },
+                        checkin_time: {
+                          lt: requestedCheckout,
+                        },
+                        OR: [
+                          {
+                            checkout_time: {
+                              gt: requestedCheckin,
+                            },
+                          },
+                          {
+                            checkout_time: null,
+                          },
+                        ],
+                      },
+                    },
+                  },
+                },
+              }
+            : undefined,
+
         orderBy: {
           table_id: "asc",
         },
@@ -15,7 +66,65 @@ class TableController {
         table_id: t.table_id.toString(),
       }));
 
-      return res.json({ tables: serialized });
+      return res.json({
+        tables: serialized,
+      });
+    } catch (error) {
+      console.error("Error fetching tables:", error);
+      return res.status(500).json({ message: "Lỗi server" });
+    }
+  };
+
+  getTableReservationHours = async (_req: Request, res: Response) => {
+    try {
+      const tableId = BigInt(_req.params.tableId);
+      const { date } = _req.query;
+
+      if (!date) {
+        return res.status(400).json({ message: "date is required" });
+      }
+
+      const parsedDate = parseISO(date as string);
+
+      if (!isValid(parsedDate)) {
+        return res.status(400).json({ message: "Invalid date format" });
+      }
+
+      const start = startOfDay(parsedDate);
+      const end = addDays(start, 1);
+
+      const reservations = await prismaClient.reservation_tables.findMany({
+        where: {
+          table_id: tableId,
+          reservations: {
+            checkin_time: {
+              lt: end,
+            },
+            checkout_time: {
+              gt: start,
+            },
+          },
+        },
+        include: {
+          reservations: {
+            select: {
+              reservation_id: true,
+              checkin_time: true,
+              checkout_time: true,
+              status: true,
+            },
+          },
+        },
+      });
+
+      const bookedSlots = reservations.map((r) => ({
+        reservation_id: r.reservations?.reservation_id.toString(),
+        checkin_time: r.reservations?.checkin_time,
+        checkout_time: r.reservations?.checkout_time,
+        status: r.reservations?.status,
+      }));
+
+      return res.json(bookedSlots);
     } catch (error) {
       console.error("Error fetching tables:", error);
       return res.status(500).json({ message: "Lỗi server" });
@@ -91,6 +200,7 @@ class TableController {
       return res.status(500).json({ message: "Lỗi server", detail: error?.message });
     }
   };
+
   deleteTable = async (req: Request, res: Response) => {
     try {
       const { tableId } = req.params;

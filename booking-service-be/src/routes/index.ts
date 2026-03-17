@@ -2,7 +2,7 @@
 import { Router } from "express";
 import TableRoutes from "./table.routes";
 import ReservationRoutes from "./reservations.routes";
-import WalletRoutes from "./wallet.route";
+import WalletRoutes from "./wallet.routes";
 import DevRoutes from "./dev.route";
 import bookingRouter from "./booking.route";
 
