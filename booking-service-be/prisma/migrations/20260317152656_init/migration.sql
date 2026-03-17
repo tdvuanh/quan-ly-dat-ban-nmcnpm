@@ -16,6 +16,7 @@ CREATE TABLE "notifications" (
     "user_id" UUID,
     "title" VARCHAR(200),
     "content" TEXT,
+    "target_role" VARCHAR(20),
     "is_read" BOOLEAN DEFAULT false,
     "created_at" TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
 
@@ -109,7 +110,7 @@ CREATE UNIQUE INDEX "wallets_user_id_key" ON "wallets"("user_id");
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- AddForeignKey
-ALTER TABLE "notifications" ADD CONSTRAINT "notifications_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("user_id") ON DELETE CASCADE ON UPDATE NO ACTION;
+ALTER TABLE "notifications" ADD CONSTRAINT "notifications_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("user_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "payments" ADD CONSTRAINT "payments_reservation_id_fkey" FOREIGN KEY ("reservation_id") REFERENCES "reservations"("reservation_id") ON DELETE CASCADE ON UPDATE NO ACTION;
