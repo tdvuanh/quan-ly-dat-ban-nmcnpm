@@ -8,11 +8,82 @@ class ReservationController {
   /** GET /api/reservations */
   async getAll(req: Request, res: Response) {
     try {
-      const { status, date, customer_phone } = req.query;
+      const { status, date, time, duration, customer_phone } = req.query;
 
-      let dateFilter = {};
+      let dateTimeFilter = {};
+
       if (date) {
         const parsedDate = parseISO(date as string);
+
+        if (!isValid(parsedDate)) {
+          return res.status(400).json({ message: "Invalid date format" });
+        }
+
+        let start: Date;
+        let end: Date;
+
+        if (time) {
+          const [hour, minute] = (time as string).split(":").map(Number);
+
+          start = new Date(parsedDate);
+          start.setHours(hour, minute, 0, 0);
+
+          const durationHours = Number(duration || 1);
+          end = new Date(start);
+          end.setHours(start.getHours() + durationHours);
+        }
+        // 🔥 CASE 2: chỉ có date → lấy cả ngày
+        else {
+          start = startOfDay(parsedDate);
+          end = addDays(start, 1);
+        }
+
+        dateTimeFilter = {
+          AND: [
+            {
+              checkin_time: {
+                lt: end,
+              },
+            },
+            {
+              checkout_time: {
+                gt: start,
+              },
+            },
+          ],
+        };
+      }
+
+      const reservations = await prismaClient.reservations.findMany({
+        where: {
+          ...(status && { status: status as reservation_status }),
+          ...(customer_phone && { customer_phone: customer_phone as string }),
+          ...dateTimeFilter,
+        },
+        include: {
+          reservation_tables: true,
+          payments: true,
+        },
+        orderBy: { created_at: "desc" },
+      });
+
+      return res.json(reservations);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Server error" });
+    }
+  }
+
+  async getByTable(req: Request, res: Response) {
+    try {
+      const tableId = BigInt(req.params.tableId);
+      const { date } = req.query;
+
+      let dateFilter = {};
+
+      if (date) {
+        const parsedDate = parseISO(date as string);
+
         if (!isValid(parsedDate)) {
           return res.status(400).json({ message: "Invalid date format" });
         }
@@ -23,22 +94,27 @@ class ReservationController {
         dateFilter = {
           checkin_time: {
             gte: start,
-            lte: end,
+            lt: end, // 🔥 nên dùng lt thay vì lte
           },
         };
       }
 
       const reservations = await prismaClient.reservations.findMany({
         where: {
-          ...(status && { status: status as reservation_status }),
-          ...(customer_phone && { customer_phone: customer_phone as string }),
           ...dateFilter,
+          reservation_tables: {
+            some: {
+              table_id: tableId,
+            },
+          },
         },
         include: {
           reservation_tables: true,
           payments: true,
         },
-        orderBy: { created_at: "desc" },
+        orderBy: {
+          checkin_time: "asc",
+        },
       });
 
       return res.json(reservations);

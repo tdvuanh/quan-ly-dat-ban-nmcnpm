@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { bookingsApi } from '@/api/bookingsApi';
+import { reservationsApi } from '@/api/reservationApi';
 import {
   Select,
   SelectContent,
@@ -22,7 +22,8 @@ import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Footer } from '@/components/Footer';
 import { useNotification } from '@/context/NotificationContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useGetAvailableTables } from '@/hook/useTables';
 
 type TableStatus = 'available' | 'reserved' | 'occupied' | 'disabled';
 
@@ -46,11 +47,12 @@ const getCurrentTime = () => {
 
 export function BookingScreen({ initialData }: BookingScreenProps) {
   const [tables, setTables] = useState<Table[]>([]);
-  const [loadingTables, setLoadingTables] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
   const [date, setDate] = useState<Date>(new Date());
-  const [selectedTime, setSelectedTime] = useState(getCurrentTime());
+  const [selectedTime, setSelectedTime] = useState(location?.state?.time);
   const [duration, setDuration] = useState(1); // Default 1 hour
   const [guests, setGuests] = useState(2);
   const [notes, setNotes] = useState('');
@@ -66,25 +68,17 @@ export function BookingScreen({ initialData }: BookingScreenProps) {
   const selectedTable = tables.find((t) => t.table_id === selectedTableId);
   const timeSlots = generateTimeSlots();
 
-  const fetchAvailableTables = async () => {
-    try {
-      setLoadingTables(true);
+  const { data: availableTablesData = [] } = useGetAvailableTables(
+    format(date, 'yyyy-MM-dd'),
+    selectedTime,
+    duration
+  );
 
-      const formattedDate = format(date, 'yyyy-MM-dd');
+  console.log('data', availableTablesData);
 
-      const res = await bookingsApi.getAvailableTables(formattedDate, selectedTime);
-
-      setTables(res.data.tables || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingTables(false);
-    }
-  };
   useEffect(() => {
     const loadTables = async () => {
       setSelectedTableId(null);
-      await fetchAvailableTables();
     };
 
     loadTables();
@@ -112,7 +106,7 @@ export function BookingScreen({ initialData }: BookingScreenProps) {
     if (!selectedTable) return;
 
     try {
-      await bookingsApi.createBooking({
+      await reservationsApi.createReservation({
         user_id: null,
         table_id: Number(selectedTableId),
         table_code: selectedTable.name,
@@ -322,7 +316,6 @@ export function BookingScreen({ initialData }: BookingScreenProps) {
                   <Select
                     value={selectedTime}
                     onValueChange={(value) => {
-                      console.log('selectedTime:', value);
                       setSelectedTime(value);
                     }}
                   >
@@ -383,18 +376,18 @@ export function BookingScreen({ initialData }: BookingScreenProps) {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-gray-900">Chọn bàn</h3>
               <Badge className="bg-green-100 text-green-700 border-green-200">
-                {availableTables.length} bàn trống
+                {availableTablesData?.length} bàn trống
               </Badge>
             </div>
 
-            {availableTables.length === 0 ? (
+            {availableTablesData?.length === 0 ? (
               <Card className="p-8 text-center rounded-2xl">
                 <p className="text-gray-500 mb-2">Không có bàn trống</p>
                 <p className="text-sm text-gray-400">Vui lòng chọn thời gian khác</p>
               </Card>
             ) : (
               <div className="grid grid-cols-2 gap-3">
-                {availableTables.map((table, index) => {
+                {availableTablesData?.map((table: Table, index: number) => {
                   const areaName = areas.find((a) => a.id === table.area)?.name || table.area || '';
                   return (
                     <motion.div

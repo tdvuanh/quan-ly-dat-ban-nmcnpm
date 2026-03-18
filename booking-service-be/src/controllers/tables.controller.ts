@@ -28,7 +28,6 @@ class TableController {
         where:
           requestedCheckin && requestedCheckout
             ? {
-                // 🔥 CHỈ LẤY BÀN KHÔNG BỊ CONFLICT
                 NOT: {
                   reservation_tables: {
                     some: {
@@ -74,6 +73,62 @@ class TableController {
       return res.status(500).json({ message: "Lỗi server" });
     }
   };
+
+  async getAvailableTables(req: Request, res: Response) {
+    try {
+      const { date, time, duration } = req.query;
+
+      if (!date || !time) {
+        return res.status(400).json({ message: "Missing date or time" });
+      }
+
+      const parsedDate = parseISO(date as string);
+      if (!isValid(parsedDate)) {
+        return res.status(400).json({ message: "Invalid date" });
+      }
+
+      // 👉 build start time
+      const [hour, minute] = (time as string).split(":").map(Number);
+
+      const start = new Date(parsedDate);
+      start.setHours(hour, minute, 0, 0);
+
+      // 👉 build end time
+      const durationHours = Number(duration || 1);
+      const end = new Date(start);
+      end.setHours(start.getHours() + durationHours);
+
+      // 🔥 QUERY CỐT LÕI
+      const tables = await prismaClient.tables.findMany({
+        where: {
+          // 👉 KHÔNG có reservation bị overlap
+          reservation_tables: {
+            none: {
+              reservations: {
+                AND: [
+                  {
+                    checkin_time: {
+                      lt: end,
+                    },
+                  },
+                  {
+                    checkout_time: {
+                      gt: start,
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+      });
+
+      return res.json(tables);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Server error" });
+    }
+  }
 
   getTableReservationHours = async (_req: Request, res: Response) => {
     try {

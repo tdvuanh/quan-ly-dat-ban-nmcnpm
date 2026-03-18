@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 import { walletApi } from '@/api/walletApi';
-import { bookingsApi } from '@/api/bookingsApi';
+import { reservationsApi } from '@/api/reservationApi';
 
 import { motion } from 'motion/react';
 import {
@@ -75,7 +75,6 @@ export function PaymentScreen(props: PaymentScreenProps) {
   };
   useEffect(() => {
     fetchWallet();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handlePayment = async () => {
@@ -103,7 +102,7 @@ export function PaymentScreen(props: PaymentScreenProps) {
     try {
       setIsProcessing(true);
 
-      const bookingRes = await bookingsApi.createBooking({
+      const bookingRes = await reservationsApi.createReservation({
         user_id: userId,
         table_code: bookingData?.tableCode,
         table_id: bookingData?.tableId,

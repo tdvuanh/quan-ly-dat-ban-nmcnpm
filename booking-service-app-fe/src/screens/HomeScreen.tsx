@@ -5,36 +5,20 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'motion/react';
 import { Calendar, User, Users, Bell, MapPin, Clock } from 'lucide-react';
 import type { Table, TableStatus } from '@/types/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+
 import { Footer } from '@/components/Footer';
 import { NotificationPopup } from '@/components/NotificationPopup';
-import { data, useNavigate } from 'react-router-dom';
-import { tablesApi } from '@/api/tables.api';
-import { bookingsApi } from '@/api/bookingsApi';
+import { useNavigate } from 'react-router-dom';
 
-// Generate time slots từ 10:00 đến 22:00
-const generateOperatingHours = () => {
-  const hours: string[] = [];
-  for (let i = 10; i <= 22; i++) {
-    hours.push(`${i.toString().padStart(2, '0')}:00`);
-    if (i < 22) {
-      hours.push(`${i.toString().padStart(2, '0')}:30`);
-    }
-  }
-  return hours;
-};
+import { reservationsApi } from '@/api/reservationApi';
+import { useTables } from '@/hook/useTables';
+
+import TableHourSlotDialog from '@/components/home/TableHourSlotDialog';
+import { useGetTodayReservations } from '@/hook/useReservation';
 
 export function HomeScreen() {
+  const today = new Date().toISOString().split('T')[0];
   const navigate = useNavigate();
-
-  const [tables, setTables] = useState<Table[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -45,31 +29,8 @@ export function HomeScreen() {
 
   const [bookedHours, setBookedHours] = useState<string[]>([]);
 
-  const timeSlots = generateOperatingHours();
-
-  useEffect(() => {
-    const fetchTables = async () => {
-      try {
-        const res = await tablesApi.getTables();
-
-        const mapped = res.data.tables.map((t: any) => ({
-          table_id: t.table_id,
-          name: t.name,
-          capacity: t.capacity,
-          status: t.status,
-        }));
-
-        setTables(mapped);
-      } catch (err) {
-        console.error('Fetch tables error:', err);
-        setTables([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTables();
-  }, []);
+  const { data: { tables } = {}, isLoading } = useTables();
+  const { data: { reservations } = {} } = useGetTodayReservations(today);
 
   const [todayBookings, setTodayBookings] = useState<any[]>([]);
 
@@ -77,7 +38,7 @@ export function HomeScreen() {
     const fetchTodayBookings = async () => {
       const today = new Date().toISOString().split('T')[0];
 
-      const res = await bookingsApi.getTodayBookings(today);
+      const res = await reservationsApi.getTodayReservations(today);
 
       setTodayBookings(res.data.bookings || []);
     };
@@ -85,18 +46,6 @@ export function HomeScreen() {
     fetchTodayBookings();
   }, []);
 
-  const fetchAvailableHours = async (tableId: string) => {
-    try {
-      const today = new Date().toISOString().split('T')[0];
-
-      const res = await bookingsApi.getBookedHours(tableId, today);
-
-      setBookedHours(res.data.booked_hours ?? []);
-    } catch (err) {
-      console.error(err);
-      setBookedHours([]);
-    }
-  };
   const getStatusText = (status: TableStatus) => {
     switch (status) {
       case 'available':
@@ -123,12 +72,12 @@ export function HomeScreen() {
     }
   };
   const isTableBookedToday = (tableId: number) => {
-    return todayBookings.some((b) => b.table_id === tableId);
+    return reservations?.some((b: any) => b.table_id === tableId);
   };
-  const availableTablesCount = tables.filter((t) => t.status === 'available').length;
-  const bookedTablesCount = tables.filter((t) => t.status === 'reserved').length;
+  const availableTablesCount = tables?.filter((t: Table) => t.status === 'available').length;
+  const bookedTablesCount = tables?.filter((t: Table) => t.status === 'reserved').length;
 
-  if (loading) {
+  if (isLoading) {
     return <div className="p-6">Đang tải danh sách bàn...</div>;
   }
 
@@ -237,7 +186,7 @@ export function HomeScreen() {
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            {tables.map((table, index) => (
+            {tables?.map((table: Table, index: number) => (
               <motion.div
                 key={table.table_id}
                 initial={{ opacity: 0, y: 20 }}
@@ -272,13 +221,8 @@ export function HomeScreen() {
                       variant="outline"
                       onClick={(e) => {
                         e.stopPropagation();
-
                         setBookedHours([]);
-
                         setSelectedTableForHours(table);
-
-                        fetchAvailableHours(table.table_id);
-
                         setIsAvailableHoursDialogOpen(true);
                       }}
                       className="flex-1 text-xs rounded-xl h-8 border-green-200 text-green-700 hover:bg-green-50"
@@ -302,69 +246,11 @@ export function HomeScreen() {
       />
 
       {/* Available Hours Dialog */}
-      <Dialog open={isAvailableHoursDialogOpen} onOpenChange={setIsAvailableHoursDialogOpen}>
-        <DialogContent className="rounded-3xl max-w-md">
-          <DialogHeader>
-            <DialogTitle>Giờ trống - Bàn {selectedTableForHours?.name}</DialogTitle>
-            <DialogDescription>Thời gian hoạt động: 10:00 - 22:00</DialogDescription>
-          </DialogHeader>
-
-          <div className="py-4">
-            <div className="grid grid-cols-4 gap-2">
-              {timeSlots.map((hour) => {
-                const isBooked = bookedHours.includes(hour);
-
-                return (
-                  <motion.button
-                    key={hour}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    whileHover={!isBooked ? { scale: 1.05 } : {}}
-                    disabled={isBooked}
-                    onClick={() => {
-                      if (!isBooked) {
-                        navigate('/booking', {
-                          state: { tableId: selectedTableForHours?.table_id, time: hour },
-                        });
-                        setIsAvailableHoursDialogOpen(false);
-                      }
-                    }}
-                    className={`
-                      px-3 py-2 rounded-lg text-sm transition-all
-                      ${
-                        isBooked
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
-                          : 'bg-linear-to-r from-green-50 to-green-100 text-green-700 hover:from-green-100 hover:to-green-200 hover:shadow-md cursor-pointer border-2 border-green-200'
-                      }
-                    `}
-                  >
-                    {hour}
-                  </motion.button>
-                );
-              })}
-            </div>
-
-            <div className="mt-6 flex items-center justify-center gap-6">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-linear-to-r from-green-50 to-green-100 border-2 border-green-200" />
-                <span className="text-xs text-gray-600">Giờ trống</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-gray-100" />
-                <span className="text-xs text-gray-600">Đã đặt</span>
-              </div>
-            </div>
-          </div>
-
-          <Button
-            variant="outline"
-            onClick={() => setIsAvailableHoursDialogOpen(false)}
-            className="w-full h-12 rounded-2xl"
-          >
-            Đóng
-          </Button>
-        </DialogContent>
-      </Dialog>
+      <TableHourSlotDialog
+        isAvailableHoursDialogOpen={isAvailableHoursDialogOpen}
+        setIsAvailableHoursDialogOpen={setIsAvailableHoursDialogOpen}
+        selectedTable={selectedTableForHours}
+      />
 
       <Footer />
     </div>

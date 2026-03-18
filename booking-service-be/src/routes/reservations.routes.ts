@@ -4,6 +4,7 @@ import { ReservationController } from "../controllers/index";
 const router = Router();
 
 router.get("/", ReservationController.getAll);
+router.get("/table/:tableId", ReservationController.getByTable);
 router.get("/:id", ReservationController.getById);
 router.post("/", ReservationController.create);
 router.put("/:id", ReservationController.update);

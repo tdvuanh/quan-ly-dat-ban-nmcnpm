@@ -5,7 +5,7 @@ const tableRouter = Router();
 
 tableRouter.get("/", TableController.getTables);
 tableRouter.post("/", TableController.createTables);
-tableRouter.get("/available", TableController.getTableReservationHours);
+tableRouter.get("/available", TableController.getAvailableTables);
 tableRouter.patch("/:tableId", TableController.updateTableStatus);
 tableRouter.delete("/:tableId", TableController.deleteTable);
 
