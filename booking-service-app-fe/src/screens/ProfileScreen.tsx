@@ -7,7 +7,7 @@ import { ArrowLeft, User, Calendar, Wallet } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Footer } from '@/components/Footer';
 import { mockUser } from '@/data/mockData';
-import { bookingsApi } from '@/api/bookingsApi';
+import { reservationsApi } from '@/api/reservationApi';
 import { walletApi } from '@/api/walletApi';
 import {
   Dialog,
@@ -70,7 +70,7 @@ export function ProfileScreen() {
     try {
       const userId = mockUser.user_id;
 
-      const res = await bookingsApi.getUserBookings(userId);
+      const res = await reservationsApi.getUserBookings(userId);
 
       const mapped: Booking[] = (res.data.bookings ?? []).map((b: any) => ({
         ...b,
@@ -87,7 +87,6 @@ export function ProfileScreen() {
 
   useEffect(() => {
     fetchBookings();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const confirmedBookings = bookings.filter((b) => b.status === 'confirmed');

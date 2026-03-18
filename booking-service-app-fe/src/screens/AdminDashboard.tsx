@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
+
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-
-import { Users, Plus, Trash2, LogOut } from 'lucide-react';
-
 import { Input } from '@/components/ui/input';
-
+import { Form } from 'radix-ui';
 import {
   Dialog,
   DialogContent,
@@ -17,15 +15,19 @@ import {
 } from '@/components/ui/dialog';
 
 import type { Table } from '@/types/table';
-
 import { Footer } from '@/components/Footer';
-
 import { useNotification } from '@/context/NotificationContext';
-
 import { useNavigate } from 'react-router-dom';
 
-import { tablesApi } from '@/api/tables.api';
-import { bookingsApi } from '@/api/bookingsApi';
+import { Users, Plus, Trash2, LogOut } from 'lucide-react';
+
+import { reservationsApi } from '@/api/reservationApi';
+import { useCreateTable, useDeleteTable, useTables, useUpdateTableStatus } from '@/hook/useTables';
+
+type FormValues = {
+  tableName: string;
+  capacity: number;
+};
 
 const generateOperatingHours = () => {
   const hours = [];
@@ -46,53 +48,31 @@ export function AdminDashboard() {
 
   const { showSuccess } = useNotification();
 
-  const [tables, setTables] = useState<Table[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [todayBookings, setTodayBookings] = useState<any[]>([]);
-
-  const [showNotifications, setShowNotifications] = useState(false);
 
   const [bookedHours, setBookedHours] = useState<string[]>([]);
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  const [newTable, setNewTable] = useState({
-    code: '',
-    capacity: 2,
-    status: 'available' as Table['status'],
-  });
-
   const timeSlots = generateOperatingHours();
 
-  const fetchTables = async () => {
-    try {
-      const res = await tablesApi.getTables();
-
-      const mapped: Table[] = res.data.tables.map((t: any) => ({
-        table_id: String(t.table_id),
-        name: t.name,
-        capacity: t.capacity,
-        status: t.status,
-        area: 'floor1',
-      }));
-
-      setTables(mapped);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  const { data: { tables } = {} } = useTables();
+  const { mutate: createTable } = useCreateTable();
+  const { mutate: deleteTable } = useDeleteTable();
+  const { mutate: updateTableStatus } = useUpdateTableStatus();
 
   const fetchTodayBookings = async () => {
     const today = new Date().toISOString().split('T')[0];
 
-    const res = await bookingsApi.getTodayBookings(today);
+    const res = await reservationsApi.getTodayReservations(today);
 
     setTodayBookings(res.data.bookings || []);
   };
 
   const fetchNotifications = async () => {
     try {
-      const res = await bookingsApi.getNotifications();
+      const res = await reservationsApi.getNotifications();
 
       setNotifications(res.data.notifications || []);
     } catch (err) {
@@ -103,45 +83,44 @@ export function AdminDashboard() {
   const fetchBookedHours = async (tableId: string) => {
     const today = new Date().toISOString().split('T')[0];
 
-    const res = await bookingsApi.getBookedHours(tableId, today);
+    const res = await reservationsApi.getBookedHours(tableId, today);
 
     setBookedHours(res.data.booked_hours ?? []);
   };
 
   useEffect(() => {
-    fetchTables();
-
     fetchTodayBookings();
-
-    fetchNotifications();
   }, []);
 
-  const handleAddTable = async () => {
-    if (!newTable.code.trim()) return;
+  const onSubmit = async (data: FormValues) => {
+    if (!data.tableName.trim()) return;
 
-    await tablesApi.createTable({
-      tableName: newTable.code,
-      capacity: newTable.capacity,
-      status: 'available',
-    });
+    createTable({ ...data, status: 'available' });
 
-    showSuccess('Thêm bàn thành công', `Bàn ${newTable.code} đã được thêm`);
+    showSuccess('Thêm bàn thành công', `Bàn ${data.tableName} đã được thêm`);
 
     setIsAddDialogOpen(false);
-
-    fetchTables();
   };
 
-  const handleDeleteTable = async (tableId: string) => {
-    await tablesApi.deleteTable(tableId);
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
-    fetchTables();
+    const formData = new FormData(event.currentTarget);
+
+    const data = {
+      tableName: String(formData.get('tableName') || '').toUpperCase(),
+      capacity: Number(formData.get('capacity')),
+    };
+
+    onSubmit(data);
+  };
+
+  const handleDeleteTable = (tableId: string) => {
+    deleteTable(tableId);
   };
 
   const handleChangeStatus = async (tableId: string, status: string) => {
-    await tablesApi.updateStatus(tableId, status);
-
-    fetchTables();
+    updateTableStatus({ tableId, status });
   };
 
   const handleServeTable = async (table: Table) => {
@@ -151,10 +130,9 @@ export function AdminDashboard() {
 
     const time = `${now.getHours().toString().padStart(2, '0')}:00`;
 
-    await bookingsApi.createBooking({
+    await reservationsApi.createReservation({
       table_id: Number(table.table_id),
       table_code: table.name,
-      area: 'floor1',
       guests: table.capacity,
       date,
       time,
@@ -163,28 +141,24 @@ export function AdminDashboard() {
       payment_method: 'cash',
     });
 
-    await tablesApi.updateStatus(table.table_id, 'occupied');
-
-    fetchTables();
+    handleChangeStatus(table.table_id, 'occupied');
 
     fetchBookedHours(table.table_id);
   };
 
   const handleFinishTable = async (tableId: string) => {
-    await bookingsApi.finishTable(tableId);
+    await reservationsApi.finishTable(tableId);
 
-    await tablesApi.updateStatus(tableId, 'available');
-
-    fetchTables();
+    handleChangeStatus(tableId, 'available');
   };
 
-  const totalTables = tables.length;
+  const totalTables = tables?.length;
 
-  const availableTables = tables.filter((t) => t.status === 'available').length;
+  const availableTables = tables?.filter((t: Table) => t.status === 'available').length;
 
-  const servingTables = tables.filter((t) => t.status === 'occupied').length;
+  const servingTables = tables?.filter((t: Table) => t.status === 'occupied').length;
 
-  const bookedTables = tables.filter((t) => t.status === 'reserved').length;
+  const bookedTables = tables?.filter((t: Table) => t.status === 'reserved').length;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -278,18 +252,59 @@ export function AdminDashboard() {
               <DialogDescription>Điền thông tin bàn</DialogDescription>
             </DialogHeader>
 
-            <Input
-              placeholder="Mã bàn"
-              value={newTable.code}
-              onChange={(e) => setNewTable({ ...newTable, code: e.target.value })}
-            />
+            <Form.Root className="space-y-4" onSubmit={handleSubmit}>
+              {/* Tên bàn */}
+              <Form.Field name="tableName" className="space-y-1">
+                <Form.Label className="text-sm font-medium">Tên bàn</Form.Label>
 
-            <Button onClick={handleAddTable}>Thêm</Button>
+                <Form.Control asChild>
+                  <Input
+                    className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-400"
+                    placeholder="VD: B01, B02..."
+                    required
+                  />
+                </Form.Control>
+
+                <Form.Message match="valueMissing" className="text-sm text-red-500">
+                  Không được để trống
+                </Form.Message>
+              </Form.Field>
+
+              {/* Sức chứa */}
+              <Form.Field name="capacity" className="space-y-1">
+                <Form.Label className="text-sm font-medium">Sức chứa</Form.Label>
+
+                <Form.Control asChild>
+                  <Input
+                    type="number"
+                    min={1}
+                    className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-400"
+                    placeholder="VD: 4"
+                    required
+                  />
+                </Form.Control>
+
+                <Form.Message match="valueMissing" className="text-sm text-red-500">
+                  Không được để trống
+                </Form.Message>
+
+                <Form.Message match="rangeUnderflow" className="text-sm text-red-500">
+                  Phải lớn hơn 0
+                </Form.Message>
+              </Form.Field>
+
+              {/* Actions */}
+              <div className="flex justify-center gap-2 pt-2">
+                <Form.Submit asChild>
+                  <Button>Thêm bàn</Button>
+                </Form.Submit>
+              </div>
+            </Form.Root>
           </DialogContent>
         </Dialog>
 
         <div className="grid grid-cols-2 gap-3">
-          {tables.map((table) => (
+          {tables?.map((table: Table) => (
             <Card key={table.table_id} className="p-4">
               <div className="flex justify-between">
                 <div>

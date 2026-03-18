@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { prisma } from "../lib/prisma"; // prisma đã export const prisma
+import prismaClient from "../config/prisma";
 
 const router = Router();
 
@@ -10,7 +10,7 @@ const router = Router();
 router.post("/seed-user", async (_req, res, next) => {
   try {
     // tùy schema bạn, sửa field cho khớp
-    const user = await prisma.users.create({
+    const user = await prismaClient.users.create({
       data: {
         full_name: "Test User",
         phone: "0123456789",
