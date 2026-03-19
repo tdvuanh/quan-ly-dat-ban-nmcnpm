@@ -230,30 +230,96 @@ class ReservationController {
   };
 
   /** PUT /api/reservations/:id */
-  async update(req: Request, res: Response) {
+  update = async (req: Request, res: Response) => {
     try {
       const id = BigInt(req.params.id);
 
-      const { checkin_time, checkout_time, number_of_people, status, user_id, note } = req.body;
+      const {
+        customer_name,
+        customer_phone,
+        checkin_time,
+        checkout_time,
+        number_of_people,
+        status,
+        note,
+        reservation_tables,
+      } = req.body;
 
-      const updated = await prismaClient.reservations.update({
-        where: { reservation_id: id },
-        data: {
-          checkin_time: new Date(checkin_time),
-          checkout_time: checkout_time ? new Date(checkout_time) : null,
-          number_of_people,
-          status,
-          user_id,
-          note,
-        },
+      // 🔥 transaction vì có nhiều bước
+      const result = await prismaClient.$transaction(async (tx) => {
+        let customerId: string | undefined = undefined;
+
+        // 👉 nếu có gửi customer info → upsert
+        if (customer_name && customer_phone) {
+          const customer = await tx.customers.upsert({
+            where: { phone: customer_phone.trim() },
+            update: {
+              full_name: customer_name.trim(),
+            },
+            create: {
+              full_name: customer_name.trim(),
+              phone: customer_phone.trim(),
+            },
+          });
+
+          customerId = customer.customer_id;
+        }
+
+        // 👉 update reservation
+        const updated = await tx.reservations.update({
+          where: { reservation_id: id },
+          data: {
+            ...(customerId && { customer_id: customerId }),
+
+            ...(checkin_time && {
+              checkin_time: new Date(checkin_time),
+            }),
+
+            ...(checkout_time !== undefined && {
+              checkout_time: checkout_time ? new Date(checkout_time) : null,
+            }),
+
+            ...(number_of_people && { number_of_people }),
+
+            ...(status && { status }),
+
+            ...(note !== undefined && { note }),
+          },
+        });
+
+        // 👉 update tables nếu có
+        if (reservation_tables) {
+          // xoá mapping cũ
+          await tx.reservation_tables.deleteMany({
+            where: { reservation_id: id },
+          });
+
+          // tạo lại
+          await tx.reservation_tables.createMany({
+            data: reservation_tables.map((t: any) => ({
+              reservation_id: id,
+              table_id: t.table_id,
+            })),
+          });
+        }
+
+        return updated;
       });
 
-      return res.json(updated);
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ message: "Server error" });
+      return res.json({
+        message: "Cập nhật reservation thành công",
+        data: result,
+      });
+    } catch (error: any) {
+      console.error("Error updating reservation:", error);
+
+      if (error?.code === "P2025") {
+        return res.status(404).json({ message: "Không tìm thấy reservation" });
+      }
+
+      return res.status(500).json({ message: "Lỗi server" });
     }
-  }
+  };
 
   /** PATCH /api/reservations/:id */
   async patch(req: Request, res: Response) {
