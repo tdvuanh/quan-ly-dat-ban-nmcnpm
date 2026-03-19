@@ -1,6 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
-import { reservationsApi } from '@/api/reservationApi';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { reservationsApi } from '@/api/reservation.api';
 import { queryKeys } from './queryKeys';
+
+import { toast } from 'sonner';
 
 export const useGetReservationByTable = (tableId: string, date: string) => {
   return useQuery({
@@ -22,5 +24,21 @@ export const useGetTodayReservations = (date: string) => {
       return res.data;
     },
     enabled: !!date,
+  });
+};
+
+export const useCreateReservation = () => {
+  return useMutation({
+    mutationFn: reservationsApi.createReservation,
+
+    onSuccess: () => {
+      toast.success('Đặt bàn thành công 🎉');
+    },
+
+    onError: (error: any) => {
+      console.error('Create reservation error:', error);
+
+      toast.error(error?.response?.data?.message || 'Đặt bàn thất bại');
+    },
   });
 };

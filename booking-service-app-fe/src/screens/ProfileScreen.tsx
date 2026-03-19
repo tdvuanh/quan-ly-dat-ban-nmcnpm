@@ -7,8 +7,8 @@ import { ArrowLeft, User, Calendar, Wallet } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Footer } from '@/components/Footer';
 import { mockUser } from '@/data/mockData';
-import { reservationsApi } from '@/api/reservationApi';
-import { walletApi } from '@/api/walletApi';
+import { reservationsApi } from '@/api/reservation.api';
+import { walletApi } from '@/api/wallet.api';
 import {
   Dialog,
   DialogContent,

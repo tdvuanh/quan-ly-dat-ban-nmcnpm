@@ -1,11 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-
-import { walletApi } from '@/api/walletApi';
-import { reservationsApi } from '@/api/reservationApi';
 
 import { motion } from 'motion/react';
 import {
@@ -21,7 +18,10 @@ import {
 
 import { Footer } from '@/components/Footer';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { mockUser } from '@/data/mockData';
+
+import { format } from 'date-fns';
+import { useCreateReservation } from '@/hook/useReservation';
+import { buildReservationTime } from '@/utils/helper';
 
 interface PaymentScreenProps {
   bookingData?: any;
@@ -36,11 +36,15 @@ export function PaymentScreen(props: PaymentScreenProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  console.log('location state =>', location.state);
+
+  const { mutate: createReservation, isPending } = useCreateReservation();
+
   const [paymentMethod, setPaymentMethod] = useState<'banking' | 'wallet'>('banking');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const bookingData = (location.state as any) ?? props.bookingData;
+  const reservationState = (location.state as any) ?? props.bookingData;
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const [wallet, setWallet] = useState<WalletInfo | null>(null);
@@ -50,95 +54,48 @@ export function PaymentScreen(props: PaymentScreenProps) {
   const depositAmount = 50000; // 50k VND deposit
 
   const hasEnoughBalance = paymentMethod !== 'wallet' || (wallet?.balance ?? 0) >= depositAmount;
-  const fetchWallet = async () => {
-    try {
-      setWalletLoading(true);
-      setWalletError(null);
-
-      const userId = bookingData?.user_id ?? mockUser.user_id;
-
-      const res = await walletApi.getWallet(userId);
-
-      const w = res.data.wallet;
-
-      setWallet({
-        wallet_id: w.wallet_id,
-        user_id: w.user_id,
-        balance: typeof w.balance === 'string' ? Number(w.balance) : w.balance,
-      });
-    } catch (err) {
-      setWallet(null);
-      setWalletError('Không lấy được ví');
-    } finally {
-      setWalletLoading(false);
-    }
-  };
-  useEffect(() => {
-    fetchWallet();
-  }, []);
 
   const handlePayment = async () => {
-    if (isProcessing) return;
+    const { checkin_time, checkout_time } = buildReservationTime({
+      reservation_date: reservationState?.reservation_date,
+      reservation_time: reservationState?.reservation_time,
+      duration: reservationState?.duration,
+    });
 
-    setPaymentError(null);
+    const payload = {
+      customer_name: reservationState?.customer_name,
+      customer_phone: reservationState?.customer_phone,
+      number_of_people: reservationState?.number_of_people,
+      checkin_time: checkin_time,
+      checkout_time: checkout_time,
+      note: reservationState?.note || '',
+      reservation_tables: [
+        {
+          table_id: reservationState?.table_id,
+        },
+      ],
 
-    if (paymentMethod === 'banking') {
-      setPaymentError('Chức năng đang bảo trì');
-      return;
-    }
+      amount: depositAmount,
+      method: paymentMethod,
+    };
 
-    if (!wallet) {
-      setPaymentError('Không lấy được ví');
-      return;
-    }
-
-    if (wallet.balance < depositAmount) {
-      setPaymentError('Số dư không đủ');
-      return;
-    }
-
-    const userId = bookingData?.user_id ?? mockUser.user_id;
-
-    try {
-      setIsProcessing(true);
-
-      const bookingRes = await reservationsApi.createReservation({
-        user_id: userId,
-        table_code: bookingData?.tableCode,
-        table_id: bookingData?.tableId,
-        guests: bookingData?.guests,
-        date: bookingData?.date,
-        time: bookingData?.time,
-        duration: bookingData?.duration,
-        deposit_amount: depositAmount,
-        payment_method: paymentMethod,
-      });
-
-      const bookingId = bookingRes.data.booking.id;
-
-      await walletApi.payDeposit({
-        user_id: userId,
-        booking_id: bookingId,
-        amount: depositAmount,
-      });
-
-      setIsSuccess(true);
-
-      setTimeout(() => {
+    createReservation(payload, {
+      onSuccess: (data) => {
+        const result = data?.data?.data;
         navigate('/payment-success', {
           state: {
-            ...bookingRes.data.booking,
+            ...result,
+            table_name: reservationState?.selected_table?.name,
             amount: depositAmount,
             paymentMethod,
           },
         });
-      }, 1000);
-    } catch (err: any) {
-      console.error(err);
-      setPaymentError(err.message || 'Thanh toán thất bại');
-    } finally {
-      setIsProcessing(false);
-    }
+      },
+      onError(error) {
+        console.error('Create reservation error:', error);
+        setPaymentError(error?.response?.data?.message || 'Thanh toán thất bại');
+      },
+    });
   };
 
   if (isSuccess) {
@@ -175,7 +132,7 @@ export function PaymentScreen(props: PaymentScreenProps) {
       <div className="bg-white shadow-sm px-6 py-4">
         <div className="flex items-center justify-between">
           <button
-            onClick={() => navigate('/confirmation', { state: { ...bookingData } })}
+            onClick={() => navigate('/confirmation', { state: reservationState })}
             className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
             disabled={isProcessing}
           >
@@ -207,7 +164,7 @@ export function PaymentScreen(props: PaymentScreenProps) {
                   <MapPin className="w-4 h-4 text-orange-500" />
                   <p className="text-xs text-gray-600">Mã bàn</p>
                 </div>
-                <p className="text-gray-900">{bookingData?.tableCode}</p>
+                <p className="text-gray-900">{reservationState?.selected_table?.name}</p>
               </div>
 
               {/* <div className="p-3 bg-white rounded-2xl">
@@ -220,7 +177,9 @@ export function PaymentScreen(props: PaymentScreenProps) {
                   <Calendar className="w-4 h-4 text-orange-500" />
                   <p className="text-xs text-gray-600">Ngày đặt</p>
                 </div>
-                <p className="text-gray-900">{bookingData?.date}</p>
+                <p className="text-gray-900">
+                  {format(reservationState?.reservation_date, 'dd/MM/yyyy')}
+                </p>
               </div>
 
               <div className="p-3 bg-white rounded-2xl">
@@ -228,7 +187,7 @@ export function PaymentScreen(props: PaymentScreenProps) {
                   <Clock className="w-4 h-4 text-orange-500" />
                   <p className="text-xs text-gray-600">Giờ đặt</p>
                 </div>
-                <p className="text-gray-900">{bookingData?.time}</p>
+                <p className="text-gray-900">{reservationState?.reservation_time}</p>
               </div>
 
               <div className="p-3 bg-white rounded-2xl">
@@ -236,7 +195,7 @@ export function PaymentScreen(props: PaymentScreenProps) {
                   <Users className="w-4 h-4 text-orange-500" />
                   <p className="text-xs text-gray-600">Số khách</p>
                 </div>
-                <p className="text-gray-900">{bookingData?.guests} người</p>
+                <p className="text-gray-900">{reservationState?.number_of_people} người</p>
               </div>
 
               <div className="p-3 bg-white rounded-2xl">
@@ -244,7 +203,7 @@ export function PaymentScreen(props: PaymentScreenProps) {
                   <Users className="w-4 h-4 text-orange-500" />
                   <p className="text-xs text-gray-600">Thời gian</p>
                 </div>
-                <p className="text-gray-900">{bookingData?.duration} giờ</p>
+                <p className="text-gray-900">{reservationState?.duration} giờ</p>
               </div>
             </div>
 
@@ -346,16 +305,10 @@ export function PaymentScreen(props: PaymentScreenProps) {
           </div>
 
           {/* Payment Button */}
-          <Button
-            onClick={handlePayment}
-            disabled={
-              isProcessing || walletLoading || (paymentMethod === 'wallet' && !hasEnoughBalance)
-            }
-            className="w-full h-14 ..."
-          >
+          <Button onClick={handlePayment} disabled={isPending} className="w-full h-14 ...">
             {paymentMethod === 'wallet' && !hasEnoughBalance ? (
               'Số dư không đủ'
-            ) : isProcessing ? (
+            ) : isPending ? (
               <div className="flex items-center">
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                 Đang xử lý...

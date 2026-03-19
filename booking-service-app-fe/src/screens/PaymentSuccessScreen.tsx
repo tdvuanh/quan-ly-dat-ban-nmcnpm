@@ -2,16 +2,17 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'motion/react';
-import { CheckCircle, Home, Receipt, Check } from 'lucide-react';
+import { Home, Receipt, Check } from 'lucide-react';
 import { Footer } from '@/components/Footer';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { format } from 'date-fns';
 
 export function PaymentSuccessScreen() {
   const navigate = useNavigate();
-  const { state } = useLocation();
-  const paymentData = state as any;
+  const location = useLocation();
+  const paymentData = location?.state as any;
 
-  const bookingCode = `BK${Date.now().toString().slice(-6)}`;
+  const bookingCode = `BK${paymentData?.reservation_id}${paymentData?.reservation_tables?.[0]?.table_id}${Date.now().toString().slice(-6)}`;
 
   const getPaymentMethodText = (method?: string) => {
     switch (method) {
@@ -70,22 +71,26 @@ export function PaymentSuccessScreen() {
             <div className="space-y-3">
               <div className="flex justify-between items-center pb-3 border-b border-gray-100">
                 <span className="text-gray-600">Bàn số</span>
-                <span className="text-gray-900">{paymentData?.table_code ?? '-'}</span>
+                <span className="text-gray-900">{paymentData?.table_name ?? '-'}</span>
               </div>
 
               <div className="flex justify-between items-center pb-3 border-b border-gray-100">
                 <span className="text-gray-600">Số khách</span>
-                <span className="text-gray-900">{paymentData?.guests ?? '-'} người</span>
+                <span className="text-gray-900">{paymentData?.number_of_people ?? '-'} người</span>
               </div>
 
               <div className="flex justify-between items-center pb-3 border-b border-gray-100">
                 <span className="text-gray-600">Ngày đặt</span>
-                <span className="text-gray-900">{paymentData?.date ?? '-'}</span>
+                <span className="text-gray-900">
+                  {format(paymentData?.created_at, 'dd/MM/yyyy') ?? '-'}
+                </span>
               </div>
 
               <div className="flex justify-between items-center pb-3 border-b border-gray-100">
                 <span className="text-gray-600">Giờ đặt</span>
-                <span className="text-gray-900">{paymentData?.time ?? '-'}</span>
+                <span className="text-gray-900">
+                  {format(paymentData?.created_at, 'HH:mm') ?? '-'}
+                </span>
               </div>
 
               <div className="flex justify-between items-center pt-2">
