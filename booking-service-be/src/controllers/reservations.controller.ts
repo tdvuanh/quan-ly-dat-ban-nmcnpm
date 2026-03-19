@@ -149,7 +149,7 @@ class ReservationController {
   }
 
   /** POST /api/reservations */
-  async create(req: Request, res: Response) {
+  create = async (req: Request, res: Response) => {
     try {
       const {
         customer_name,
@@ -158,35 +158,76 @@ class ReservationController {
         checkout_time,
         number_of_people,
         status,
-        user_id,
         note,
         reservation_tables,
       } = req.body;
 
-      const reservation = await prismaClient.reservations.create({
-        data: {
-          customer_name,
-          customer_phone,
-          checkin_time: new Date(checkin_time),
-          checkout_time: checkout_time ? new Date(checkout_time) : null,
-          number_of_people,
-          status,
-          user_id,
-          note,
-          reservation_tables: {
-            create: reservation_tables?.map((t: any) => ({
-              table_id: t.table_id,
-            })),
+      console.log("req.body =>", req.body);
+
+      // ✅ validate cơ bản
+      if (!customer_name || typeof customer_name !== "string") {
+        return res.status(400).json({ message: "Tên khách hàng không hợp lệ" });
+      }
+
+      if (!customer_phone || typeof customer_phone !== "string") {
+        return res.status(400).json({ message: "Số điện thoại không hợp lệ" });
+      }
+
+      if (!checkin_time) {
+        return res.status(400).json({ message: "Thiếu thời gian checkin" });
+      }
+
+      if (!reservation_tables || reservation_tables.length === 0) {
+        return res.status(400).json({ message: "Phải chọn ít nhất 1 bàn" });
+      }
+
+      // 🔥 TRANSACTION
+      const result = await prismaClient.$transaction(async (tx) => {
+        // 1️⃣ upsert customer
+        const customer = await tx.customers.upsert({
+          where: { phone: customer_phone.trim() },
+          update: {
+            full_name: customer_name.trim(),
           },
-        },
+          create: {
+            full_name: customer_name.trim(),
+            phone: customer_phone.trim(),
+          },
+        });
+
+        // 2️⃣ create reservation
+        const reservation = await tx.reservations.create({
+          data: {
+            customer_id: customer.customer_id,
+            checkin_time: new Date(checkin_time),
+            checkout_time: checkout_time ? new Date(checkout_time) : null,
+            number_of_people,
+            status,
+            note,
+
+            reservation_tables: {
+              create: reservation_tables.map((t: any) => ({
+                table_id: t.table_id,
+              })),
+            },
+          },
+          include: {
+            reservation_tables: true,
+          },
+        });
+
+        return reservation;
       });
 
-      return res.status(201).json(reservation);
+      return res.status(201).json({
+        message: "Đặt bàn thành công",
+        data: result,
+      });
     } catch (error) {
-      console.error(error);
-      return res.status(500).json({ message: "Server error" });
+      console.error("Error creating reservation:", error);
+      return res.status(500).json({ message: "Lỗi server" });
     }
-  }
+  };
 
   /** PUT /api/reservations/:id */
   async update(req: Request, res: Response) {

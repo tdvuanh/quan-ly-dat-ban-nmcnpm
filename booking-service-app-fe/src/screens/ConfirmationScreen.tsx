@@ -2,32 +2,27 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'motion/react';
-import {
-  CheckCircle,
-  Users,
-  CreditCard,
-  Home,
-  ArrowLeft,
-  Calendar,
-  Clock,
-  MapPin,
-} from 'lucide-react';
+import { CheckCircle, Users, CreditCard, Home, ArrowLeft, Calendar, Clock } from 'lucide-react';
 import { Footer } from '@/components/Footer';
 
 import { useNavigate, useLocation } from 'react-router-dom';
+import { format } from 'date-fns';
 
 export function ConfirmationScreen() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const bookingData = location.state as any;
+  const reservationState = location?.state || {};
+
+  const onGoback = () => navigate(-1);
+
   return (
     <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-orange-50 flex flex-col">
       {/* Header */}
       <div className="bg-white shadow-sm px-6 py-4">
         <div className="flex items-center justify-between">
           <button
-            onClick={() => navigate('/booking', { state: { ...bookingData } })}
+            onClick={onGoback}
             className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -53,7 +48,7 @@ export function ConfirmationScreen() {
               transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
               className="w-24 h-24 bg-linear-to-br from-green-400 to-green-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-200"
             >
-              <CheckCircle className="w-12 h-12 text-white" />
+              <CheckCircle className="w-12 h-12 text-green-600" />
             </motion.div>
             <h2 className="text-green-600 mb-2">Đã chọn bàn thành công!</h2>
             <p className="text-gray-600">Vui lòng tiến hành thanh toán để hoàn tất đặt bàn</p>
@@ -68,22 +63,22 @@ export function ConfirmationScreen() {
 
             <div className="space-y-4">
               {/* Customer Info */}
-              {bookingData?.customerName && (
+              {reservationState?.customer_name && (
                 <div className="pb-4 border-b border-gray-100 space-y-3">
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Khách hàng</p>
-                    <p className="text-gray-900">{bookingData?.customerName}</p>
+                    <p className="text-gray-900">{reservationState?.customer_name}</p>
                   </div>
-                  {bookingData?.phoneNumber && (
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">Điện thoại</p>
-                      <p className="text-gray-900">{bookingData?.phoneNumber}</p>
-                    </div>
-                  )}
-                  {bookingData?.notes && (
+
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Điện thoại</p>
+                    <p className="text-gray-900">{reservationState?.customer_phone}</p>
+                  </div>
+
+                  {reservationState?.note && (
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Ghi chú</p>
-                      <p className="text-gray-900">{bookingData?.notes}</p>
+                      <p className="text-gray-900">{reservationState?.note}</p>
                     </div>
                   )}
                 </div>
@@ -92,7 +87,7 @@ export function ConfirmationScreen() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Mã bàn</p>
-                  <p className="text-gray-900">{bookingData?.tableCode}</p>
+                  <p className="text-gray-900">{reservationState?.selected_table?.name}</p>
                 </div>
                 <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center">
                   <span className="text-3xl">🪑</span>
@@ -102,17 +97,13 @@ export function ConfirmationScreen() {
               <div className="pt-4 border-t border-gray-100 space-y-3">
                 <div className="flex items-center">
                   <div className="w-10 h-10 rounded-2xl bg-orange-100 flex items-center justify-center mr-3">
-                    <MapPin className="w-5 h-5 text-orange-600" />
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <div className="w-10 h-10 rounded-2xl bg-orange-100 flex items-center justify-center mr-3">
                     <Calendar className="w-5 h-5 text-orange-600" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Ngày đặt</p>
-                    <p className="text-gray-900">{bookingData?.date}</p>
+                    <p className="text-gray-900">
+                      {format(reservationState?.reservation_date, 'dd/MM/yyyy')}
+                    </p>
                   </div>
                 </div>
 
@@ -123,7 +114,7 @@ export function ConfirmationScreen() {
                   <div>
                     <p className="text-sm text-gray-600">Giờ đặt</p>
                     <p className="text-gray-900">
-                      {bookingData?.time} ({bookingData?.duration}h)
+                      {reservationState?.reservation_time} ({reservationState?.duration}h)
                     </p>
                   </div>
                 </div>
@@ -134,17 +125,7 @@ export function ConfirmationScreen() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Số lượng khách</p>
-                    <p className="text-gray-900">{bookingData?.guests} người</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <div className="w-10 h-10 rounded-2xl bg-orange-100 flex items-center justify-center mr-3">
-                    <span className="text-lg">💺</span>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Loại bàn</p>
-                    <p className="text-gray-900">{bookingData?.capacity} chỗ ngồi</p>
+                    <p className="text-gray-900">{reservationState?.number_of_people} người</p>
                   </div>
                 </div>
               </div>
@@ -154,7 +135,7 @@ export function ConfirmationScreen() {
           {/* Actions */}
           <div className="space-y-3">
             <Button
-              onClick={() => navigate('/payment', { state: { ...bookingData } })}
+              onClick={() => navigate('/payment', { state: reservationState })}
               className="w-full h-14 bg-linear-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl shadow-lg shadow-orange-200"
             >
               <CreditCard className="w-5 h-5 mr-2" />

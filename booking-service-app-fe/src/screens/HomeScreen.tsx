@@ -4,13 +4,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { motion } from 'motion/react';
 import { Calendar, User, Users, Bell, MapPin, Clock } from 'lucide-react';
-import type { Table, TableStatus } from '@/types/table';
+import type { Table, TableStatus } from '@/types/table.type';
 
 import { Footer } from '@/components/Footer';
 import { NotificationPopup } from '@/components/NotificationPopup';
 import { useNavigate } from 'react-router-dom';
 
-import { reservationsApi } from '@/api/reservationApi';
+import { reservationsApi } from '@/api/reservation.api';
 import { useTables } from '@/hook/useTables';
 
 import TableHourSlotDialog from '@/components/home/TableHourSlotDialog';

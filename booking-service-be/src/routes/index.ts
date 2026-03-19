@@ -3,13 +3,15 @@ import { Router } from "express";
 import TableRoutes from "./table.routes";
 import ReservationRoutes from "./reservations.routes";
 import WalletRoutes from "./wallet.routes";
-import DevRoutes from "./dev.route";
+import UserRouter from "./user.routes";
+import CustomerRouter from "./customer.routes";
 
 const router = Router();
 
 router.use("/tables", TableRoutes);
 router.use("/reservations", ReservationRoutes);
 router.use("/wallet", WalletRoutes);
-router.use("/dev", DevRoutes);
+router.use("/users", UserRouter);
+router.use("/customers", CustomerRouter);
 
 export default router;

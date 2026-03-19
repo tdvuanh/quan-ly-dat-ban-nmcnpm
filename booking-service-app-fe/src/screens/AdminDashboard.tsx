@@ -14,20 +14,15 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
-import type { Table } from '@/types/table';
+import type { CreateTableFormValues, Table } from '@/types';
 import { Footer } from '@/components/Footer';
 import { useNotification } from '@/context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
 
 import { Users, Plus, Trash2, LogOut } from 'lucide-react';
 
-import { reservationsApi } from '@/api/reservationApi';
+import { reservationsApi } from '@/api/reservation.api';
 import { useCreateTable, useDeleteTable, useTables, useUpdateTableStatus } from '@/hook/useTables';
-
-type FormValues = {
-  tableName: string;
-  capacity: number;
-};
 
 const generateOperatingHours = () => {
   const hours = [];
@@ -92,7 +87,7 @@ export function AdminDashboard() {
     fetchTodayBookings();
   }, []);
 
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = async (data: CreateTableFormValues) => {
     if (!data.tableName.trim()) return;
 
     createTable({ ...data, status: 'available' });
