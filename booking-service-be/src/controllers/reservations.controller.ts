@@ -234,22 +234,11 @@ class ReservationController {
     try {
       const id = BigInt(req.params.id);
 
-      const {
-        customer_name,
-        customer_phone,
-        checkin_time,
-        checkout_time,
-        number_of_people,
-        status,
-        user_id,
-        note,
-      } = req.body;
+      const { checkin_time, checkout_time, number_of_people, status, user_id, note } = req.body;
 
       const updated = await prismaClient.reservations.update({
         where: { reservation_id: id },
         data: {
-          customer_name,
-          customer_phone,
           checkin_time: new Date(checkin_time),
           checkout_time: checkout_time ? new Date(checkout_time) : null,
           number_of_people,
