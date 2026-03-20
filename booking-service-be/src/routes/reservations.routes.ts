@@ -11,5 +11,6 @@ router.put("/:id", ReservationController.update);
 router.patch("/:id", ReservationController.patch);
 router.delete("/:id", ReservationController.delete);
 router.patch("/:id/status", ReservationController.updateStatus);
+router.get("/by-phone/:phone", ReservationController.getReservationsByPhone);
 
 export default router;

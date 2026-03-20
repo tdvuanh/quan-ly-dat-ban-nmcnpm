@@ -193,7 +193,7 @@ export function LogoPage() {
     <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-orange-50">
       {/* Header */}
       <div className="bg-white shadow-sm px-6 py-4 flex items-center justify-between">
-        <Button variant="ghost" onClick={() => navigate('/home')} className="rounded-full">
+        <Button variant="ghost" onClick={() => navigate(-1)} className="rounded-full">
           <ArrowLeft className="w-5 h-5 mr-2" />
           Quay lại
         </Button>

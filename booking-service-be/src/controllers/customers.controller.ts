@@ -211,6 +211,63 @@ class CustomerController {
       return res.status(500).json({ message: "Lỗi server" });
     }
   };
+
+  guestLogin = async (req: Request, res: Response) => {
+    try {
+      const { full_name, phone } = req.body;
+
+      if (!full_name || typeof full_name !== "string") {
+        return res.status(400).json({ message: "Họ tên không hợp lệ" });
+      }
+
+      if (!phone || typeof phone !== "string") {
+        return res.status(400).json({ message: "Số điện thoại không hợp lệ" });
+      }
+
+      const trimmedPhone = phone.trim();
+      const trimmedName = full_name.trim();
+
+      // 🔍 kiểm tra tồn tại
+      let customer = await prismaClient.customers.findUnique({
+        where: { phone: trimmedPhone },
+      });
+
+      // ✅ nếu chưa có → tạo mới
+      if (!customer) {
+        customer = await prismaClient.customers.create({
+          data: {
+            full_name: trimmedName,
+            phone: trimmedPhone,
+          },
+        });
+
+        return res.status(201).json({
+          message: "Tạo khách hàng mới",
+          isNew: true,
+          data: customer,
+        });
+      }
+
+      // ✅ nếu đã có → update tên (optional)
+      if (customer.full_name !== trimmedName) {
+        customer = await prismaClient.customers.update({
+          where: { customer_id: customer.customer_id },
+          data: {
+            full_name: trimmedName,
+          },
+        });
+      }
+
+      return res.status(200).json({
+        message: "Đăng nhập thành công",
+        isNew: false,
+        data: customer,
+      });
+    } catch (error) {
+      console.error("Error guest login:", error);
+      return res.status(500).json({ message: "Lỗi server" });
+    }
+  };
 }
 
 export default new CustomerController();

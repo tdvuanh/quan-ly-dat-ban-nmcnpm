@@ -3,12 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { motion } from 'motion/react';
-import { ArrowLeft, User, Calendar, Wallet } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { ArrowLeft, User, Calendar } from 'lucide-react';
+import { useState } from 'react';
 import { Footer } from '@/components/Footer';
 import { mockUser } from '@/data/mockData';
-import { reservationsApi } from '@/api/reservation.api';
-import { walletApi } from '@/api/wallet.api';
+
 import {
   Dialog,
   DialogContent,
@@ -21,83 +20,33 @@ import { Textarea } from '@/components/ui/textarea';
 import { useNotification } from '@/context/NotificationContext';
 
 import { useNavigate } from 'react-router-dom';
-
-type WalletInfo = {
-  wallet_id: string | number;
-  user_id: string;
-  balance: string | number;
-  created_at?: string;
-  updated_at?: string;
-};
-
-type Booking = {
-  id: string;
-  user_id: string;
-  table_id?: string | null;
-  table_code: string;
-  tableCode?: string; // FE dùng
-  area?: string | null;
-  guests: number;
-  date: string;
-  time: string;
-  duration?: number | null;
-  deposit_amount: string | number; // Decimal có thể về string
-  payment_method?: string | null;
-  status: 'confirmed' | 'served' | 'cancelled';
-  created_at?: string;
-  note?: string;
-};
+import { useGetCustomerReservationByPhone } from '@/hook/useReservation';
+import type { Reservation } from '@/types';
+import { getReservationTimeInfo } from '@/utils/helper';
 
 export function ProfileScreen() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('bookings');
-  const [bookings, setBookings] = useState<Booking[]>([]);
+
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<Reservation | null>(null);
   const [cancelReason, setCancelReason] = useState('');
 
-  const [topupAmount, setTopupAmount] = useState<number>(10000);
-  const [isTopupLoading, setIsTopupLoading] = useState(false);
+  const { showInfo } = useNotification();
 
-  const [wallet, setWallet] = useState<WalletInfo | null>(null);
-  const [isWalletDialogOpen, setIsWalletDialogOpen] = useState(false);
-  const [isWalletLoading, setIsWalletLoading] = useState(false);
-  const [walletError, setWalletError] = useState<string | null>(null);
+  const { data } = useGetCustomerReservationByPhone('0398250394');
 
-  const { showSuccess, showInfo } = useNotification();
+  const reservationList = data?.reservations || [];
 
-  const fetchBookings = async () => {
-    try {
-      const userId = mockUser.user_id;
-
-      const res = await reservationsApi.getUserBookings(userId);
-
-      const mapped: Booking[] = (res.data.bookings ?? []).map((b: any) => ({
-        ...b,
-        tableCode: b.table_code,
-        guests: Number(b.guests ?? 0),
-        duration: b.duration != null ? Number(b.duration) : null,
-      }));
-
-      setBookings(mapped);
-    } catch (err) {
-      showInfo('Lỗi', 'Không lấy được lịch sử đặt bàn');
-    }
-  };
-
-  useEffect(() => {
-    fetchBookings();
-  }, []);
-
-  const confirmedBookings = bookings.filter((b) => b.status === 'confirmed');
-  const servedBookings = bookings.filter((b) => b.status === 'served');
-  const cancelledBookings = bookings.filter((b) => b.status === 'cancelled');
+  const confirmedBookings = reservationList?.filter((b: any) => b.status === 'pending');
+  const servedBookings = reservationList?.filter((b: any) => b.status === 'completed');
+  const cancelledBookings = reservationList?.filter((b: any) => b.status === 'cancelled');
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'confirmed':
+      case 'pending':
         return <Badge className="bg-green-100 text-green-700 border-green-200">Đã xác nhận</Badge>;
-      case 'served':
+      case 'completed':
         return <Badge className="bg-blue-100 text-blue-700 border-blue-200">Đã được phục vụ</Badge>;
       case 'cancelled':
         return <Badge className="bg-red-100 text-red-700 border-red-200">Đã hủy</Badge>;
@@ -106,64 +55,32 @@ export function ProfileScreen() {
     }
   };
 
-  const fetchWallet = async () => {
-    try {
-      setIsWalletLoading(true);
-      setWalletError(null);
-
-      const res = await walletApi.getWallet(mockUser.user_id);
-
-      setWallet(res.data.wallet);
-    } catch (err) {
-      setWallet(null);
-      setWalletError('Không lấy được ví');
-    } finally {
-      setIsWalletLoading(false);
-    }
-  };
-  const handleTopup = async () => {
-    try {
-      setIsTopupLoading(true);
-
-      await walletApi.topup({
-        user_id: mockUser.user_id,
-        amount: topupAmount,
-      });
-
-      showSuccess('Nạp tiền thành công', `+${topupAmount}`);
-
-      await fetchWallet();
-    } catch (err: any) {
-      showInfo('Nạp tiền thất bại', err?.response?.data?.message ?? 'Không nạp được');
-    } finally {
-      setIsTopupLoading(false);
-    }
-  };
-  const BookingCard = ({ booking }: { booking: Booking }) => {
-    // Format date and time: hh:mm dd/mm/yyyy
-    const formatDateTime = (dateStr: string, timeStr: string) => {
-      return `${timeStr} ${dateStr}`;
-    };
+  const BookingCard = ({ reservation }: { reservation: Reservation }) => {
+    const { date: reservation_date, durations } = getReservationTimeInfo(
+      reservation?.checkin_time,
+      reservation?.checkout_time
+    );
 
     return (
       <Card className="p-4 rounded-2xl mb-3">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <p className="text-gray-900">Mã bàn: {booking.tableCode ?? booking.table_code}</p>
-              {getStatusBadge(booking.status)}
+              <p className="text-gray-900">
+                Mã bàn: {reservation?.reservation_tables?.[0]?.table_name}
+              </p>
+              {getStatusBadge(reservation?.status)}
             </div>
             <div className="space-y-1.5 text-sm text-gray-600">
-              <div className="flex items-center">{booking.area}</div>
               <div className="flex items-center">
-                {formatDateTime(booking.date, booking.time)} ({booking.duration}h)
+                Thời gian: {reservation_date} ({durations}h)
               </div>
             </div>
           </div>
         </div>
-        {booking.note && (
+        {reservation?.note && (
           <div className="pt-3 border-t border-gray-100">
-            <p className="text-xs text-gray-500">Ghi chú: {booking.note}</p>
+            <p className="text-xs text-gray-500">Ghi chú: {reservation.note}</p>
           </div>
         )}
       </Card>
@@ -177,30 +94,6 @@ export function ProfileScreen() {
       showInfo('Vui lòng nhập lý do hủy', 'Lý do hủy là bắt buộc');
       return;
     }
-
-    try {
-      const bookingId = selectedBooking.id; // ✅ uuid string
-
-      const res = await fetch(`http://localhost:3000/api/bookings/${bookingId}/cancel`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cancelReason }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        showInfo('Hủy thất bại', data?.message ?? 'Không hủy được');
-        return;
-      }
-
-      showSuccess('Đã hủy đặt bàn', 'Booking đã được cập nhật');
-      setIsCancelDialogOpen(false);
-      setCancelReason('');
-      await fetchBookings(); // ✅ reload list để tabs cập nhật
-    } catch (e) {
-      showInfo('Lỗi', 'Không kết nối được server');
-    }
   };
 
   return (
@@ -208,25 +101,13 @@ export function ProfileScreen() {
       {/* Header */}
       <div className="bg-white shadow-sm px-6 py-4">
         <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={() => navigate('/home')}
+          <Button
+            onClick={() => navigate(-1)}
             className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
-          </button>
+          </Button>
           <h2 className="text-gray-900">Tài khoản</h2>
-
-          <button
-            onClick={() => {
-              setIsWalletDialogOpen(true);
-              fetchWallet();
-            }}
-            className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
-            aria-label="Ví"
-            title="Ví"
-          >
-            <Wallet className="w-5 h-5 text-gray-600" />
-          </button>
         </div>
       </div>
 
@@ -311,8 +192,8 @@ export function ProfileScreen() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsContent value="bookings" className="mt-4">
               {confirmedBookings.length > 0 ? (
-                confirmedBookings.map((booking) => (
-                  <BookingCard key={booking.id} booking={booking} />
+                confirmedBookings.map((reservation: Reservation) => (
+                  <BookingCard key={reservation.reservation_id} reservation={reservation} />
                 ))
               ) : (
                 <Card className="p-8 text-center rounded-2xl">
@@ -332,7 +213,9 @@ export function ProfileScreen() {
 
             <TabsContent value="completed" className="mt-6">
               {servedBookings.length > 0 ? (
-                servedBookings.map((booking) => <BookingCard key={booking.id} booking={booking} />)
+                servedBookings.map((reservation: Reservation) => (
+                  <BookingCard key={reservation.reservation_id} reservation={reservation} />
+                ))
               ) : (
                 <Card className="p-8 text-center rounded-2xl">
                   <p className="text-gray-600">Chưa có lịch sử hoàn tất</p>
@@ -342,8 +225,8 @@ export function ProfileScreen() {
 
             <TabsContent value="cancelled" className="mt-6">
               {cancelledBookings.length > 0 ? (
-                cancelledBookings.map((booking) => (
-                  <BookingCard key={booking.id} booking={booking} />
+                cancelledBookings.map((reservation: Reservation) => (
+                  <BookingCard key={reservation.reservation_id} reservation={reservation} />
                 ))
               ) : (
                 <Card className="p-8 text-center rounded-2xl">
@@ -432,83 +315,6 @@ export function ProfileScreen() {
             >
               Xác nhận hủy
             </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Wallet Dialog */}
-      <Dialog open={isWalletDialogOpen} onOpenChange={setIsWalletDialogOpen}>
-        <DialogContent className="rounded-3xl sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Ví của bạn</DialogTitle>
-            <DialogDescription>Thông tin ví</DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-3">
-            <div className="rounded-2xl border p-4">
-              <p className="text-xs text-gray-500">User ID</p>
-              <p className="mt-1 text-sm font-medium break-all">{mockUser.user_id}</p>
-            </div>
-
-            <div className="rounded-2xl border p-4">
-              <p className="text-xs text-gray-500">Tên</p>
-              <p className="mt-1 text-sm font-medium">{mockUser.name}</p>
-            </div>
-
-            {isWalletLoading ? (
-              <div className="rounded-2xl border p-4 text-sm text-gray-600">Đang tải ví...</div>
-            ) : walletError ? (
-              <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                {walletError}
-              </div>
-            ) : (
-              <>
-                <div className="rounded-2xl border p-4">
-                  <p className="text-xs text-gray-500">Wallet ID</p>
-                  <p className="mt-1 text-sm font-medium">
-                    {wallet?.wallet_id ?? 'Chưa có ví (hãy topup để tạo)'}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border p-4">
-                  <p className="text-xs text-gray-500">Số dư</p>
-                  <p className="mt-1 text-sm font-medium">{wallet?.balance ?? 0}</p>
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="mt-4 flex gap-2">
-            <div className="rounded-2xl border p-4">
-              <p className="text-xs text-gray-500 mb-2">Số tiền nạp</p>
-              <input
-                type="number"
-                min={1000}
-                step={1000}
-                value={topupAmount}
-                onChange={(e) => setTopupAmount(Number(e.target.value))}
-                className="w-full h-11 rounded-xl border border-gray-200 px-3 outline-none"
-                placeholder="Nhập số tiền"
-              />
-            </div>
-
-            <div className="mt-4 flex gap-2">
-              <Button
-                variant="outline"
-                onClick={handleTopup}
-                disabled={isTopupLoading || topupAmount <= 0}
-                className="flex-1 h-12 rounded-2xl"
-              >
-                {isTopupLoading ? 'Đang nạp...' : 'Nạp tiền'}
-              </Button>
-
-              <Button
-                onClick={() => setIsWalletDialogOpen(false)}
-                className="flex-1 h-12 rounded-2xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
-              >
-                Đóng
-              </Button>
-            </div>
           </div>
         </DialogContent>
       </Dialog>
