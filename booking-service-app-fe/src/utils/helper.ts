@@ -4,6 +4,11 @@ type BuildReservationTimeInput = {
   duration: number;
 };
 
+type ReservationTimeInfo = {
+  date: string; // yyyy-mm-dd
+  durations: string;
+};
+
 export const buildReservationTime = ({
   reservation_date,
   reservation_time,
@@ -41,3 +46,27 @@ export const buildReservationTime = ({
     checkout_time: checkout, // Date object
   };
 };
+
+export function getReservationTimeInfo(
+  checkin_time: string,
+  checkout_time: string
+): ReservationTimeInfo {
+  const checkin = new Date(checkin_time);
+  const checkout = new Date(checkout_time);
+
+  // Lấy ngày (local)
+  const date = checkin.toLocaleDateString('vi-VN');
+  // hoặc format chuẩn:
+  // const date = checkin.toISOString().split("T")[0];
+
+  const diffMs = checkout.getTime() - checkin.getTime();
+  const hours = diffMs / (1000 * 60 * 60);
+
+  // làm tròn 1 số thập phân nếu cần
+  const formatted = Number.isInteger(hours) ? hours.toString() : hours.toFixed(1);
+
+  return {
+    date,
+    durations: formatted,
+  };
+}

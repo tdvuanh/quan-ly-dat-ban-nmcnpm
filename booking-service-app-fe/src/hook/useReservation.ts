@@ -20,10 +20,21 @@ export const useGetTodayReservations = (date: string) => {
     queryKey: [...queryKeys.tables, 'schedules', date],
     queryFn: async () => {
       const res = await reservationsApi.getTodayReservations(date);
-      console.log('resp =>', res);
+
       return res.data;
     },
     enabled: !!date,
+  });
+};
+
+export const useGetCustomerReservationByPhone = (customerPhone: string) => {
+  return useQuery({
+    queryKey: [...queryKeys.reservations],
+    queryFn: async () => {
+      const res = await reservationsApi.getCustomerReservationByPhone(customerPhone);
+      return res.data;
+    },
+    enabled: !!customerPhone,
   });
 };
 

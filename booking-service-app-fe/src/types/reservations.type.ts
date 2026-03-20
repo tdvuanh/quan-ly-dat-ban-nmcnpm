@@ -15,3 +15,27 @@ export type ReservationTime = {
 
   note?: string;
 };
+
+export type ReservationTable = {
+  table_id: string;
+  table_name: string;
+  capacity: number;
+};
+
+export type Reservation = {
+  reservation_id: string;
+  customer_id: string;
+
+  checkin_time: string; // ISO string
+  checkout_time: string; // ISO string
+
+  number_of_people: number;
+  note: string;
+
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+
+  reservation_tables: ReservationTable[];
+
+  created_at: string; // ISO string
+  updated_at: string; // ISO string
+};

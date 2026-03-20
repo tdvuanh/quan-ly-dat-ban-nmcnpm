@@ -149,7 +149,7 @@ class ReservationController {
   }
 
   /** POST /api/reservations */
-  create = async (req: Request, res: Response) => {
+  async create(req: Request, res: Response) {
     try {
       const {
         customer_name,
@@ -227,10 +227,10 @@ class ReservationController {
       console.error("Error creating reservation:", error);
       return res.status(500).json({ message: "Lỗi server" });
     }
-  };
+  }
 
   /** PUT /api/reservations/:id */
-  update = async (req: Request, res: Response) => {
+  async update(req: Request, res: Response) {
     try {
       const id = BigInt(req.params.id);
 
@@ -319,7 +319,7 @@ class ReservationController {
 
       return res.status(500).json({ message: "Lỗi server" });
     }
-  };
+  }
 
   /** PATCH /api/reservations/:id */
   async patch(req: Request, res: Response) {
@@ -408,6 +408,64 @@ class ReservationController {
       return res.status(500).json({ message: "Server error" });
     }
   }
+
+  getReservationsByPhone = async (req: Request, res: Response) => {
+    try {
+      const { phone } = req.params;
+
+      if (!phone || typeof phone !== "string") {
+        return res.status(400).json({ message: "Số điện thoại không hợp lệ" });
+      }
+
+      // 👉 tìm customer trước
+      const customer = await prismaClient.customers.findUnique({
+        where: { phone },
+      });
+
+      if (!customer) {
+        return res.json({
+          reservations: [],
+          message: "Không tìm thấy khách hàng",
+        });
+      }
+
+      // 👉 lấy reservations
+      const reservations = await prismaClient.reservations.findMany({
+        where: {
+          customer_id: customer.customer_id,
+        },
+        include: {
+          reservation_tables: {
+            include: {
+              tables: true, // 👉 join thông tin bàn
+            },
+          },
+        },
+        orderBy: {
+          checkin_time: "desc",
+        },
+      });
+
+      // 👉 serialize (nếu cần)
+      const serialized = reservations.map((r) => ({
+        ...r,
+        reservation_id: r.reservation_id.toString(),
+        reservation_tables: r.reservation_tables.map((rt) => ({
+          table_id: rt.table_id?.toString(),
+          table_name: rt.tables?.name,
+          capacity: rt.tables?.capacity,
+        })),
+      }));
+
+      return res.json({
+        customer,
+        reservations: serialized,
+      });
+    } catch (error) {
+      console.error("Error fetching reservations by phone:", error);
+      return res.status(500).json({ message: "Lỗi server" });
+    }
+  };
 }
 
 export default new ReservationController();
