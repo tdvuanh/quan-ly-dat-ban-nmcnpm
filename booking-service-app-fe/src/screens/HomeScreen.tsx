@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -7,11 +7,9 @@ import { Calendar, User, Users, MapPin, Clock } from 'lucide-react';
 import type { Table } from '@/types/table.type';
 
 import { Footer } from '@/components/Footer';
-import { NotificationPopup } from '@/components/NotificationPopup';
 import { useNavigate } from 'react-router-dom';
 
 import { useTables } from '@/hook/useTables';
-
 import TableHourSlotDialog from '@/components/home/TableHourSlotDialog';
 import { useGetTodayReservations } from '@/hook/useReservation';
 
@@ -19,51 +17,38 @@ export function HomeScreen() {
   const today = new Date().toISOString().split('T')[0];
   const navigate = useNavigate();
 
-  const [showNotifications, setShowNotifications] = useState(false);
-  const notificationButtonRef = useRef<HTMLButtonElement | null>(null);
-
-  // Available Hours Dialog State
   const [isAvailableHoursDialogOpen, setIsAvailableHoursDialogOpen] = useState(false);
   const [selectedTableForHours, setSelectedTableForHours] = useState<Table | null>(null);
 
-  const [bookedHours, setBookedHours] = useState<string[]>([]);
+  const { data: tablesResponse, isLoading } = useTables();
+  const { data: reservationsResponse } = useGetTodayReservations(today);
 
-  const { data: { tables } = {}, isLoading } = useTables();
-  const { data: { reservations } = {} } = useGetTodayReservations(today);
+  const tables = tablesResponse?.tables ?? [];
+  const reservations = reservationsResponse?.data ?? [];
 
-  // const getStatusText = (status: TableStatus) => {
-  //   switch (status) {
-  //     case 'available':
-  //       return 'Trống';
-  //     case 'reserved':
-  //       return 'Đã đặt';
-  //     case 'occupied':
-  //       return 'Đang sử dụng';
-  //     case 'disabled':
-  //       return 'Ngưng dùng';
-  //   }
-  // };
+  const bookedTableIdsToday = useMemo(() => {
+    return new Set(
+      reservations
+        ?.map((reservation: any) => Number(reservation.reservation_id))
+        .filter((tableId: number) => !Number.isNaN(tableId))
+    );
+  }, [reservations]);
 
-  // const getStatusColor = (status: TableStatus) => {
-  //   switch (status) {
-  //     case 'available':
-  //       return 'bg-green-100 text-green-700 border-green-200';
-  //     case 'reserved':
-  //       return 'bg-orange-100 text-orange-700 border-orange-200';
-  //     case 'occupied':
-  //       return 'bg-blue-100 text-blue-700 border-blue-200';
-  //     case 'disabled':
-  //       return 'bg-gray-100 text-gray-700 border-gray-200';
-  //   }
-  // };
-  const isTableBookedToday = (tableId: number) => {
-    return reservations?.some((b: any) => b.table_id === tableId);
-  };
-  const availableTablesCount = tables?.filter((t: Table) => t.status === 'available').length;
-  const bookedTablesCount = tables?.filter((t: Table) => t.status === 'reserved').length;
+  const bookedTablesCount = bookedTableIdsToday.size;
+
+  const availableTablesCount = useMemo(() => {
+    return tables.filter((table: Table) => !bookedTableIdsToday.has(Number(table.table_id))).length;
+  }, [tables, bookedTableIdsToday]);
+
+  const isTableBookedToday = (tableId: number) => bookedTableIdsToday.has(Number(tableId));
 
   if (isLoading) {
-    return <div className="p-6">Đang tải danh sách bàn...</div>;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3">
+        <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-gray-600">Đang tải danh sách bàn...</p>
+      </div>
+    );
   }
 
   return (
@@ -81,23 +66,12 @@ export function HomeScreen() {
             </div>
           </div>
 
-          <div className="flex gap-2">
-            {/* <button
-              onClick={() => setShowNotifications((v) => !v)}
-              ref={notificationButtonRef}
-              className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors relative"
-            >
-              <Bell className="w-5 h-5 text-gray-600" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full"></span>
-            </button> */}
-
-            <Button
-              onClick={() => navigate('/profile')}
-              className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center hover:bg-orange-200 transition-colors"
-            >
-              <User className="w-5 h-5 text-orange-600" />
-            </Button>
-          </div>
+          <Button
+            onClick={() => navigate('/profile')}
+            className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center hover:bg-orange-200 transition-colors"
+          >
+            <User className="w-5 h-5 text-orange-600" />
+          </Button>
         </div>
       </div>
 
@@ -171,64 +145,60 @@ export function HomeScreen() {
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            {tables?.map((table: Table, index: number) => (
-              <motion.div
-                key={table.table_id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <Card className="p-3 rounded-2xl border-2 transition-all min-h-[130px] flex flex-col justify-between bg-white">
-                  <div className="flex items-start justify-between">
-                    <div className="flex flex-col gap-2">
-                      <p className="text-gray-900">{table.name}</p>
-                      <div className="flex items-baseline gap-1 text-sm text-gray-600">
-                        <Users className="w-4 h-4" />
-                        <span>{table.capacity} người</span>
+            {tables.map((table: Table, index: number) => {
+              const isBooked = isTableBookedToday(Number(table.table_id));
+
+              return (
+                <motion.div
+                  key={table.table_id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <Card className="p-3 rounded-2xl border-2 transition-all min-h-[130px] flex flex-col justify-between bg-white">
+                    <div className="flex items-start justify-between">
+                      <div className="flex flex-col gap-2">
+                        <p className="text-gray-900">{table.name}</p>
+                        <div className="flex items-baseline gap-1 text-sm text-gray-600">
+                          <Users className="w-4 h-4" />
+                          <span>{table.capacity} người</span>
+                        </div>
                       </div>
+
+                      <Badge
+                        variant="outline"
+                        className={`text-xs rounded-full px-2 py-1 ${
+                          isBooked
+                            ? 'bg-orange-100 text-orange-700 border-orange-200'
+                            : 'bg-green-100 text-green-700 border-green-200'
+                        }`}
+                      >
+                        {isBooked ? 'Đã đặt' : 'Trống'}
+                      </Badge>
                     </div>
 
-                    <Badge
-                      variant="outline"
-                      className={`text-xs rounded-full px-2 py-1 ${
-                        isTableBookedToday(Number(table.table_id))
-                          ? 'bg-orange-100 text-orange-700 border-orange-200'
-                          : 'bg-green-100 text-green-700 border-green-200'
-                      }`}
-                    >
-                      {isTableBookedToday(Number(table.table_id)) ? 'Đã đặt' : 'Trống'}
-                    </Badge>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setBookedHours([]);
-                        setSelectedTableForHours(table);
-                        setIsAvailableHoursDialogOpen(true);
-                      }}
-                      className="flex-1 text-xs rounded-xl h-8 border-green-200 text-green-700 hover:bg-green-50"
-                    >
-                      <Clock className="w-3 h-3 mr-1" />
-                      Xem giờ trống
-                    </Button>
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedTableForHours(table);
+                          setIsAvailableHoursDialogOpen(true);
+                        }}
+                        className="flex-1 text-xs rounded-xl h-8 border-green-200 text-green-700 hover:bg-green-50"
+                      >
+                        <Clock className="w-3 h-3 mr-1" />
+                        Xem giờ trống
+                      </Button>
+                    </div>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </div>
-
-      {/* Notification Popup */}
-      <NotificationPopup
-        isOpen={showNotifications}
-        onClose={() => setShowNotifications(false)}
-        anchorRef={notificationButtonRef}
-      />
 
       {/* Available Hours Dialog */}
       <TableHourSlotDialog

@@ -51,8 +51,8 @@ export function ProfileScreen() {
         return <Badge className="bg-green-100 text-green-700 border-green-200">Đã xác nhận</Badge>;
       case 'completed':
         return <Badge className="bg-blue-100 text-blue-700 border-blue-200">Đã được phục vụ</Badge>;
-      case 'cancelled':
-        return <Badge className="bg-red-100 text-red-700 border-red-200">Đã hủy</Badge>;
+      // case 'cancelled':
+      //   return <Badge className="bg-red-100 text-red-700 border-red-200">Đã hủy</Badge>;
       default:
         return null;
     }
@@ -142,7 +142,7 @@ export function ProfileScreen() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-3 gap-3 mb-6"
+          className="grid grid-cols-2 gap-3 mb-6"
         >
           {/* Đã đặt */}
           <button type="button" onClick={() => setActiveTab('bookings')}>
@@ -175,19 +175,6 @@ export function ProfileScreen() {
           </button>
 
           {/* Đã hủy */}
-          <button type="button" onClick={() => setActiveTab('cancelled')}>
-            <Card
-              className={`p-4 rounded-2xl text-center border transition
-      ${
-        activeTab === 'cancelled'
-          ? 'border-red-500 bg-red-50'
-          : 'border-gray-200 hover:border-gray-300'
-      }`}
-            >
-              <p className="text-red-600 mb-1">{cancelledBookings.length}</p>
-              <p className="text-xs text-gray-600">Đã hủy</p>
-            </Card>
-          </button>
         </motion.div>
 
         {/* Bookings History */}
