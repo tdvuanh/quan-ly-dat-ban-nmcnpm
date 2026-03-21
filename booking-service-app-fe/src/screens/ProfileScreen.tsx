@@ -23,10 +23,13 @@ import { useNavigate } from 'react-router-dom';
 import { useGetCustomerReservationByPhone } from '@/hook/useReservation';
 import type { Reservation } from '@/types';
 import { getReservationTimeInfo } from '@/utils/helper';
+import { useStore } from '@/store';
 
 export function ProfileScreen() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('bookings');
+
+  const { customer, clearCustomer } = useStore();
 
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Reservation | null>(null);
@@ -34,7 +37,7 @@ export function ProfileScreen() {
 
   const { showInfo } = useNotification();
 
-  const { data } = useGetCustomerReservationByPhone('0398250394');
+  const { data } = useGetCustomerReservationByPhone(customer?.customer_phone || '');
 
   const reservationList = data?.reservations || [];
 
@@ -53,6 +56,11 @@ export function ProfileScreen() {
       default:
         return null;
     }
+  };
+
+  const onLogOut = () => {
+    clearCustomer();
+    navigate('/');
   };
 
   const BookingCard = ({ reservation }: { reservation: Reservation }) => {
@@ -121,9 +129,8 @@ export function ProfileScreen() {
                 <User className="w-8 h-8 text-white" />
               </div>
               <div className="flex-1">
-                <p className="text-white mb-1">{mockUser.name}</p>
-                <div className="text-sm text-white/80 mb-1">{mockUser.email}</div>
-                <div className="text-sm text-white/80">{mockUser.phone}</div>
+                <p className="text-white mb-1">{customer?.customer_name}</p>
+                <p className="text-sm text-white-80">{customer?.customer_phone}</p>
               </div>
             </div>
           </Card>
@@ -245,7 +252,7 @@ export function ProfileScreen() {
           className="mt-8"
         >
           <Button
-            onClick={() => navigate('/login')}
+            onClick={onLogOut}
             variant="outline"
             className="w-full h-12 rounded-2xl border-2 border-red-200 text-red-600 hover:bg-red-50"
           >
