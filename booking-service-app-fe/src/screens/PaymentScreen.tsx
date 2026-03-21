@@ -253,7 +253,7 @@ export function PaymentScreen(props: PaymentScreenProps) {
               </Card>
 
               {/* Wallet */}
-              <Card
+              {/* <Card
                 onClick={() => {
                   setPaymentMethod('wallet');
                   setPaymentError(null);
@@ -300,7 +300,7 @@ export function PaymentScreen(props: PaymentScreenProps) {
           `}
                   />
                 </div>
-              </Card>
+              </Card> */}
             </div>
           </div>
 

@@ -1,16 +1,15 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { motion } from 'motion/react';
-import { Calendar, User, Users, Bell, MapPin, Clock } from 'lucide-react';
-import type { Table, TableStatus } from '@/types/table.type';
+import { Calendar, User, Users, MapPin, Clock } from 'lucide-react';
+import type { Table } from '@/types/table.type';
 
 import { Footer } from '@/components/Footer';
 import { NotificationPopup } from '@/components/NotificationPopup';
 import { useNavigate } from 'react-router-dom';
 
-import { reservationsApi } from '@/api/reservation.api';
 import { useTables } from '@/hook/useTables';
 
 import TableHourSlotDialog from '@/components/home/TableHourSlotDialog';
@@ -32,45 +31,31 @@ export function HomeScreen() {
   const { data: { tables } = {}, isLoading } = useTables();
   const { data: { reservations } = {} } = useGetTodayReservations(today);
 
-  const [todayBookings, setTodayBookings] = useState<any[]>([]);
+  // const getStatusText = (status: TableStatus) => {
+  //   switch (status) {
+  //     case 'available':
+  //       return 'Trống';
+  //     case 'reserved':
+  //       return 'Đã đặt';
+  //     case 'occupied':
+  //       return 'Đang sử dụng';
+  //     case 'disabled':
+  //       return 'Ngưng dùng';
+  //   }
+  // };
 
-  useEffect(() => {
-    const fetchTodayBookings = async () => {
-      const today = new Date().toISOString().split('T')[0];
-
-      const res = await reservationsApi.getTodayReservations(today);
-
-      setTodayBookings(res.data.bookings || []);
-    };
-
-    fetchTodayBookings();
-  }, []);
-
-  const getStatusText = (status: TableStatus) => {
-    switch (status) {
-      case 'available':
-        return 'Trống';
-      case 'reserved':
-        return 'Đã đặt';
-      case 'occupied':
-        return 'Đang sử dụng';
-      case 'disabled':
-        return 'Ngưng dùng';
-    }
-  };
-
-  const getStatusColor = (status: TableStatus) => {
-    switch (status) {
-      case 'available':
-        return 'bg-green-100 text-green-700 border-green-200';
-      case 'reserved':
-        return 'bg-orange-100 text-orange-700 border-orange-200';
-      case 'occupied':
-        return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'disabled':
-        return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
-  };
+  // const getStatusColor = (status: TableStatus) => {
+  //   switch (status) {
+  //     case 'available':
+  //       return 'bg-green-100 text-green-700 border-green-200';
+  //     case 'reserved':
+  //       return 'bg-orange-100 text-orange-700 border-orange-200';
+  //     case 'occupied':
+  //       return 'bg-blue-100 text-blue-700 border-blue-200';
+  //     case 'disabled':
+  //       return 'bg-gray-100 text-gray-700 border-gray-200';
+  //   }
+  // };
   const isTableBookedToday = (tableId: number) => {
     return reservations?.some((b: any) => b.table_id === tableId);
   };
@@ -97,21 +82,21 @@ export function HomeScreen() {
           </div>
 
           <div className="flex gap-2">
-            <button
+            {/* <button
               onClick={() => setShowNotifications((v) => !v)}
               ref={notificationButtonRef}
               className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors relative"
             >
               <Bell className="w-5 h-5 text-gray-600" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full"></span>
-            </button>
+            </button> */}
 
-            <button
+            <Button
               onClick={() => navigate('/profile')}
               className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center hover:bg-orange-200 transition-colors"
             >
               <User className="w-5 h-5 text-orange-600" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>

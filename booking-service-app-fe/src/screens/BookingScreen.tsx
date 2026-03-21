@@ -25,6 +25,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useGetAvailableTables } from '@/hook/useTables';
 import type { Table } from '@/types';
 import { FormControl } from '@radix-ui/react-form';
+import { useStore } from '@/store';
 
 interface BookingScreenProps {
   initialData?: { tableId?: number };
@@ -40,6 +41,8 @@ const getCurrentTime = () => {
 export function BookingScreen({ initialData }: BookingScreenProps) {
   const navigate = useNavigate();
   const location = useLocation();
+
+  const { customer } = useStore();
 
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [date, setDate] = useState<Date>(new Date());
@@ -137,6 +140,8 @@ export function BookingScreen({ initialData }: BookingScreenProps) {
                         <Input
                           required
                           type="text"
+                          value={customer?.customer_name}
+                          readOnly
                           placeholder="Nhập tên"
                           className="h-12 rounded-2xl border-gray-200 flex-1"
                         />
@@ -155,6 +160,8 @@ export function BookingScreen({ initialData }: BookingScreenProps) {
                         <Input
                           required
                           type="tel"
+                          value={customer?.customer_phone}
+                          readOnly
                           onChange={(e) => {
                             const value = e.target.value;
                             // Kiểm tra liên tục khi nhập

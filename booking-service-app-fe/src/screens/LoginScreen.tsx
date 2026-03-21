@@ -13,6 +13,11 @@ interface LoginScreenProps {
   onLogin: (role: 'guest' | 'staff') => void;
 }
 
+const isValidVietnamPhone = (phone: string) => {
+  const cleaned = phone.replace(/\s+/g, '');
+  return /^(0|\+84)[0-9]{9}$/.test(cleaned);
+};
+
 export function LoginScreen({ onLogin }: LoginScreenProps) {
   const navigate = useNavigate();
   const { setCustomer } = useStore();
@@ -30,6 +35,16 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
       customer_name: String(formData.get('customer_name') || ''),
       customer_phone: String(formData.get('customer_phone') || ''),
     };
+
+    if (!guestData.customer_name) {
+      alert('Vui lòng nhập tên');
+      return;
+    }
+
+    if (!isValidVietnamPhone(guestData.customer_phone)) {
+      alert('Số điện thoại không hợp lệ');
+      return;
+    }
 
     mutate(
       { full_name: guestData.customer_name, phone: guestData.customer_phone },
