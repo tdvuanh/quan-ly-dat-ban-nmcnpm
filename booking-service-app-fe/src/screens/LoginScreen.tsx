@@ -8,6 +8,7 @@ import { useStore } from '@/store';
 import { Form } from 'radix-ui';
 import { Input } from '@/components/ui/input';
 import { useCustomerLogin } from '@/hook/useCustomet';
+import { useAdminLogin } from '@/hook/useUser';
 
 interface LoginScreenProps {
   onLogin: (role: 'guest' | 'staff') => void;
@@ -23,9 +24,11 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
   const { setCustomer } = useStore();
 
   const { mutate, isPending } = useCustomerLogin();
+  const { mutate: adminMutate, isPending: isAdminPending } = useAdminLogin();
 
-  const [mode, setMode] = useState<'select' | 'customer'>('select');
+  const [mode, setMode] = useState<'select' | 'customer' | 'staff'>('select');
 
+  // ================= CUSTOMER =================
   const handleGuestSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -51,15 +54,38 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
       {
         onSuccess: () => {
           setCustomer(guestData);
+          onLogin('guest');
           navigate('/home', { replace: true });
         },
       }
     );
   };
 
-  const onStaffLogin = () => {
-    onLogin('staff');
-    navigate('/admin', { replace: true });
+  // ================= STAFF =================
+  const handleStaffSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+
+    const adminData = {
+      user_name: String(formData.get('user_name') || ''),
+      password: String(formData.get('password') || ''),
+    };
+
+    if (!adminData.user_name || !adminData.password) {
+      alert('Vui lòng nhập đầy đủ thông tin');
+      return;
+    }
+
+    adminMutate(adminData, {
+      onSuccess: () => {
+        onLogin('staff');
+        navigate('/admin', { replace: true });
+      },
+    });
+
+    // onLogin('staff');
+    // navigate('/admin', { replace: true });
   };
 
   return (
@@ -79,7 +105,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-md w-full"
         >
-          {/* SELECT ROLE */}
+          {/* ================= SELECT ROLE ================= */}
           {mode === 'select' && (
             <>
               <div className="text-center mb-12">
@@ -105,7 +131,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
                 <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
                   <Button
-                    onClick={onStaffLogin}
+                    onClick={() => setMode('staff')}
                     variant="outline"
                     className="w-full h-20 rounded-2xl border-2 border-orange-200 hover:bg-orange-50 flex items-center justify-start px-8"
                   >
@@ -122,7 +148,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             </>
           )}
 
-          {/* CUSTOMER FORM */}
+          {/* ================= CUSTOMER FORM ================= */}
           {mode === 'customer' && (
             <Form.Root onSubmit={handleGuestSubmit}>
               <div className="text-center mb-8">
@@ -134,24 +160,80 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 <Form.Field name="customer_name">
                   <Form.Control asChild>
                     <Input
+                      name="customer_name"
                       className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-400"
                       placeholder="Tên khách hàng"
                       required
                     />
                   </Form.Control>
                 </Form.Field>
+
                 <Form.Field name="customer_phone">
                   <Form.Control asChild>
                     <Input
+                      name="customer_phone"
                       className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-400"
                       placeholder="Số điện thoại"
                       required
                     />
                   </Form.Control>
                 </Form.Field>
+
                 <Form.Submit asChild>
                   <Button className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white rounded-xl">
                     {isPending ? (
+                      <div className="flex items-center">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                        Đang đăng nhập...
+                      </div>
+                    ) : (
+                      <>Đăng nhập</>
+                    )}
+                  </Button>
+                </Form.Submit>
+
+                <Button variant="ghost" onClick={() => setMode('select')} className="w-full">
+                  ← Quay lại
+                </Button>
+              </div>
+            </Form.Root>
+          )}
+
+          {/* ================= STAFF FORM ================= */}
+          {mode === 'staff' && (
+            <Form.Root onSubmit={handleStaffSubmit}>
+              <div className="text-center mb-8">
+                <h1 className="text-gray-900 mb-2">Đăng nhập nhân viên</h1>
+                <p className="text-gray-600">Nhập thông tin để tiếp tục</p>
+              </div>
+
+              <div className="space-y-4">
+                <Form.Field name="user_name">
+                  <Form.Control asChild>
+                    <Input
+                      name="user_name"
+                      className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                      placeholder="Tên đăng nhập"
+                      required
+                    />
+                  </Form.Control>
+                </Form.Field>
+
+                <Form.Field name="password">
+                  <Form.Control asChild>
+                    <Input
+                      name="password"
+                      type="password"
+                      className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                      placeholder="Mật khẩu"
+                      required
+                    />
+                  </Form.Control>
+                </Form.Field>
+
+                <Form.Submit asChild>
+                  <Button className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white rounded-xl">
+                    {isAdminPending ? (
                       <div className="flex items-center">
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                         Đang đăng nhập...
