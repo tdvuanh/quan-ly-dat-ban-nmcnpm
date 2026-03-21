@@ -20,8 +20,8 @@ export const useGetTodayReservations = (date: string) => {
     queryKey: [...queryKeys.tables, 'schedules', date],
     queryFn: async () => {
       const res = await reservationsApi.getTodayReservations(date);
-
-      return res.data;
+      console.log('Reservations API Response:', res);
+      return res;
     },
     enabled: !!date,
   });
