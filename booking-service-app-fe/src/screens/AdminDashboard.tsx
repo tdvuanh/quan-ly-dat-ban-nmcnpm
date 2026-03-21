@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,68 +24,17 @@ import { Users, Plus, Trash2, LogOut } from 'lucide-react';
 import { reservationsApi } from '@/api/reservation.api';
 import { useCreateTable, useDeleteTable, useTables, useUpdateTableStatus } from '@/hook/useTables';
 
-const generateOperatingHours = () => {
-  const hours = [];
-
-  for (let i = 10; i <= 22; i++) {
-    hours.push(`${i.toString().padStart(2, '0')}:00`);
-
-    if (i < 22) {
-      hours.push(`${i.toString().padStart(2, '0')}:30`);
-    }
-  }
-
-  return hours;
-};
-
 export function AdminDashboard() {
   const navigate = useNavigate();
 
   const { showSuccess } = useNotification();
 
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [todayBookings, setTodayBookings] = useState<any[]>([]);
-
-  const [bookedHours, setBookedHours] = useState<string[]>([]);
-
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-
-  const timeSlots = generateOperatingHours();
 
   const { data: { tables } = {} } = useTables();
   const { mutate: createTable } = useCreateTable();
   const { mutate: deleteTable } = useDeleteTable();
   const { mutate: updateTableStatus } = useUpdateTableStatus();
-
-  const fetchTodayBookings = async () => {
-    const today = new Date().toISOString().split('T')[0];
-
-    const res = await reservationsApi.getTodayReservations(today);
-
-    setTodayBookings(res.data.bookings || []);
-  };
-
-  const fetchNotifications = async () => {
-    try {
-      const res = await reservationsApi.getNotifications();
-
-      setNotifications(res.data.notifications || []);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const fetchBookedHours = async (tableId: string) => {
-    const today = new Date().toISOString().split('T')[0];
-
-    const res = await reservationsApi.getBookedHours(tableId, today);
-
-    setBookedHours(res.data.booked_hours ?? []);
-  };
-
-  useEffect(() => {
-    fetchTodayBookings();
-  }, []);
 
   const onSubmit = async (data: CreateTableFormValues) => {
     if (!data.tableName.trim()) return;
@@ -137,8 +86,6 @@ export function AdminDashboard() {
     });
 
     handleChangeStatus(table.table_id, 'occupied');
-
-    fetchBookedHours(table.table_id);
   };
 
   const handleFinishTable = async (tableId: string) => {

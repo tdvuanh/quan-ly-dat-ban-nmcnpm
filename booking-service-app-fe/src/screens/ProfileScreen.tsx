@@ -261,7 +261,7 @@ export function ProfileScreen() {
       <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
         <DialogContent className="rounded-3xl sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Hủy đặt bàn {selectedBooking?.tableCode}</DialogTitle>
+            <DialogTitle>Hủy đặt bàn {selectedBooking?.reservation_id}</DialogTitle>
             <DialogDescription>
               Vui lòng nhập lý do hủy đặt bàn. Nếu hủy trong vòng 1 giờ trước giờ đặt, tiền cọc sẽ
               không được hoàn lại.
@@ -287,8 +287,8 @@ export function ProfileScreen() {
             {selectedBooking && (
               <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4">
                 <p className="text-sm text-orange-800">
-                  <strong>Lưu ý:</strong> Thời gian đặt bàn: {selectedBooking.time}{' '}
-                  {selectedBooking.date}
+                  <strong>Lưu ý:</strong> Thời gian đặt bàn: {selectedBooking?.time}{' '}
+                  {selectedBooking?.date}
                 </p>
                 <p className="text-sm text-orange-700 mt-2">
                   • Hủy trước 1h: Hoàn cọc 100%
